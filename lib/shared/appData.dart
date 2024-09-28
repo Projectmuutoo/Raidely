@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 
 class Appdata with ChangeNotifier {
-  late UserProfile user;
-  String userEmail = '';
-  int userId = 0;
+  late loginKeepUser loginKeepUsers;
 }
 
-class UserProfile {
-  int idx = 0;
-  String fullname = '';
+class loginKeepUser {
+  String phone = '';
+  // String fullname = '';
 }

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "769157526468",
+    "project_id": "raidely-ab5cf",
+    "storage_bucket": "raidely-ab5cf.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:769157526468:android:11256fa4cfa15639586a91",
+        "android_client_info": {
+          "package_name": "com.example.raidely"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSwxUTmYy00GKaCApy92IsGUfMy5OIJZY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

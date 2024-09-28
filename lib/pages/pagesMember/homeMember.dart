@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:raidely/pages/login.dart';
-import 'package:raidely/pages/navpages/profileUser.dart';
+import 'package:raidely/pages/pagesMember/profileUser.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -87,7 +87,7 @@ class _HomePageState extends State<HomePage> {
                         Text(
                           'ธเนดดดดดดดด',
                           style: TextStyle(
-                            fontSize: Get.textTheme.titleLarge!.fontSize,
+                            fontSize: Get.textTheme.titleMedium!.fontSize,
                             color: Colors.black,
                           ),
                         ),
@@ -110,7 +110,7 @@ class _HomePageState extends State<HomePage> {
                                       : 'ใส่เบอร์คนที่คุณอยากส่งของ',
                                   hintStyle: TextStyle(
                                     fontSize:
-                                        Get.textTheme.titleMedium!.fontSize,
+                                        Get.textTheme.labelMedium!.fontSize,
                                     color: const Color(0xff898989),
                                   ),
                                   constraints: BoxConstraints(

@@ -49,6 +49,7 @@ class _RegisterPageState extends State<RegisterPage> {
   TextEditingController carRegistrationCtl = TextEditingController();
   TextEditingController addressCtl = TextEditingController();
   TextEditingController sameLocationAaddressText = TextEditingController();
+  TextEditingController latlng = TextEditingController();
   bool selectType = false;
   String selectedType = '';
   bool isTyping = false;
@@ -1107,19 +1108,28 @@ class _RegisterPageState extends State<RegisterPage> {
                                         '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 14c2.206 0 4-1.794 4-4s-1.794-4-4-4-4 1.794-4 4 1.794 4 4 4zm0-6c1.103 0 2 .897 2 2s-.897 2-2 2-2-.897-2-2 .897-2 2-2z"></path><path d="M11.42 21.814a.998.998 0 0 0 1.16 0C12.884 21.599 20.029 16.44 20 10c0-4.411-3.589-8-8-8S4 5.589 4 9.995c-.029 6.445 7.116 11.604 7.42 11.819zM12 4c3.309 0 6 2.691 6 6.005.021 4.438-4.388 8.423-6 9.73-1.611-1.308-6.021-5.294-6-9.735 0-3.309 2.691-6 6-6z"></path></svg>',
                                       ),
                                       !sameLocationAaddress
-                                          ? Text(
-                                              sameLocationAaddressText.text,
-                                              style: TextStyle(
-                                                fontSize: Get.textTheme
-                                                    .titleMedium!.fontSize,
-                                                color:
-                                                    !checkTextsameLocationAaddressWarningIsEmpty
-                                                        ? Colors.black
-                                                        : Color(
-                                                            int.parse(
-                                                              '0xff$textsameLocationAaddressWarningIsEmpty',
+                                          ? Container(
+                                              constraints: BoxConstraints(
+                                                  maxWidth: width *
+                                                      0.6), // จำกัดความกว้างของข้อความ
+                                              child: Text(
+                                                sameLocationAaddressText.text,
+                                                style: TextStyle(
+                                                  fontSize: Get.textTheme
+                                                      .titleMedium!.fontSize,
+                                                  color:
+                                                      !checkTextsameLocationAaddressWarningIsEmpty
+                                                          ? Colors.black
+                                                          : Color(
+                                                              int.parse(
+                                                                '0xff$textsameLocationAaddressWarningIsEmpty',
+                                                              ),
                                                             ),
-                                                          ),
+                                                ),
+                                                maxLines:
+                                                    1, // จำกัดการแสดงผลให้อยู่ในบรรทัดเดียว
+                                                overflow: TextOverflow
+                                                    .ellipsis, // แสดง ... เมื่อข้อความยาวเกิน
                                               ),
                                             )
                                           : Container(
@@ -1729,6 +1739,7 @@ class _RegisterPageState extends State<RegisterPage> {
           checkTextAddressWarningIsEmpty = false;
           checkTextsameLocationAaddressWarningIsEmpty = false;
         });
+
         //ถ้าเบอร์โทรถูกต้อง
         if (phoneCth.text.length == 10) {
           //ถ้าหาก phoneMembers,phoneRiders ตรงกันกับที่ user พิมมา แสดงว่าเบอร์ซ้ำสมัครบ่ได่
@@ -1789,6 +1800,56 @@ class _RegisterPageState extends State<RegisterPage> {
               ],
             );
           } else {
+            late RegisterMemberPostRequest jsonRegisterMember;
+            String downloadUrl = "";
+            if (savedFile != null) {
+              // แสดง Loading Indicator
+              Get.defaultDialog(
+                title: "",
+                titlePadding: EdgeInsets.zero,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: MediaQuery.of(context).size.width * 0.02,
+                  vertical: MediaQuery.of(context).size.height * 0.02,
+                ),
+                content: Column(
+                  children: [
+                    const CircularProgressIndicator(),
+                    SizedBox(height: MediaQuery.of(context).size.width * 0.03),
+                    Text(
+                      'กำลังบันทึกข้อมูล..',
+                      style: TextStyle(
+                        fontSize: Get.textTheme.titleLarge!.fontSize,
+                        color: const Color(0xffaf4c31),
+                      ),
+                    ),
+                    Text(
+                      'เรากำลังบันทึกข้อมูล กรุณารอสักครู่...',
+                      style: TextStyle(
+                        fontSize: Get.textTheme.titleSmall!.fontSize,
+                      ),
+                    ),
+                  ],
+                ),
+                barrierDismissible: false,
+              );
+
+              try {
+                // สร้างอ้างอิงไปยัง Firebase Storage
+                Reference storageReference = FirebaseStorage.instance.ref().child(
+                    'uploads/${DateTime.now().millisecondsSinceEpoch}_${savedFile!.path.split('/').last}');
+
+                // อัพโหลดไฟล์และรอจนกว่าจะเสร็จสิ้น
+                UploadTask uploadTask = storageReference.putFile(savedFile!);
+                TaskSnapshot taskSnapshot = await uploadTask;
+
+                // รับ URL ของรูปที่อัพโหลดสำเร็จ
+                downloadUrl = await taskSnapshot.ref.getDownloadURL();
+              } catch (e) {
+              } finally {
+                // ปิด Loading Indicator
+                Get.back();
+              }
+            }
             //ถ้า password ตรงกัน
             if (passwordCth.text == passwordCheckCtl.text) {
               //ถ้ามีการจิ้ม 'ตำแหน่งเดียวกันกับที่อยู่'
@@ -1802,6 +1863,17 @@ class _RegisterPageState extends State<RegisterPage> {
                     //เปลี่ยนสีเดิมกลับ
                     checkTextsameLocationAaddressWarningIsEmpty = false;
                   });
+                  Map<String, double> latLng =
+                      await getLatLngFromAddress(addressCtl.text);
+                  latlng.text = '${latLng['lat']},${latLng['lng']}';
+                  jsonRegisterMember = RegisterMemberPostRequest(
+                    name: nameCth.text,
+                    phone: phoneCth.text,
+                    password: passwordCth.text,
+                    address: addressCtl.text,
+                    gps: latlng.text,
+                    imageMember: savedFile != null ? downloadUrl : "-",
+                  );
                 } else {
                   setState(() {
                     //ถ้าหากช่อง address ว่าง
@@ -1822,6 +1894,14 @@ class _RegisterPageState extends State<RegisterPage> {
                       });
                     } else {
                       //ถ้ามีการเลือกตำแหน่งผ่าน showModalBottomSheet
+                      jsonRegisterMember = RegisterMemberPostRequest(
+                        name: nameCth.text,
+                        phone: phoneCth.text,
+                        password: passwordCth.text,
+                        address: addressCtl.text,
+                        gps: latlng.text,
+                        imageMember: savedFile != null ? downloadUrl : "-",
+                      );
                     }
                   } else {
                     setState(() {
@@ -1836,65 +1916,6 @@ class _RegisterPageState extends State<RegisterPage> {
                   });
                 }
               }
-              String downloadUrl = "";
-              if (savedFile != null) {
-                // แสดง Loading Indicator
-                Get.defaultDialog(
-                  title: "",
-                  titlePadding: EdgeInsets.zero,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: MediaQuery.of(context).size.width * 0.02,
-                    vertical: MediaQuery.of(context).size.height * 0.02,
-                  ),
-                  content: Column(
-                    children: [
-                      const CircularProgressIndicator(),
-                      SizedBox(
-                          height: MediaQuery.of(context).size.width * 0.03),
-                      Text(
-                        'กำลังบันทึกข้อมูล..',
-                        style: TextStyle(
-                          fontSize: Get.textTheme.titleLarge!.fontSize,
-                          color: const Color(0xffaf4c31),
-                        ),
-                      ),
-                      Text(
-                        'เรากำลังบันทึกข้อมูล กรุณารอสักครู่...',
-                        style: TextStyle(
-                          fontSize: Get.textTheme.titleSmall!.fontSize,
-                        ),
-                      ),
-                    ],
-                  ),
-                  barrierDismissible: false,
-                );
-
-                try {
-                  // สร้างอ้างอิงไปยัง Firebase Storage
-                  Reference storageReference = FirebaseStorage.instance.ref().child(
-                      'uploads/${DateTime.now().millisecondsSinceEpoch}_${savedFile!.path.split('/').last}');
-
-                  // อัพโหลดไฟล์และรอจนกว่าจะเสร็จสิ้น
-                  UploadTask uploadTask = storageReference.putFile(savedFile!);
-                  TaskSnapshot taskSnapshot = await uploadTask;
-
-                  // รับ URL ของรูปที่อัพโหลดสำเร็จ
-                  downloadUrl = await taskSnapshot.ref.getDownloadURL();
-                } catch (e) {
-                } finally {
-                  // ปิด Loading Indicator
-                  Get.back();
-                }
-              }
-              RegisterMemberPostRequest jsonRegisterMember =
-                  RegisterMemberPostRequest(
-                name: nameCth.text,
-                phone: phoneCth.text,
-                password: passwordCth.text,
-                address: addressCtl.text,
-                gps: sameLocationAaddressText.text,
-                imageMember: savedFile != null ? downloadUrl : "-",
-              );
 
               var responsePostJsonRegisterMember = await http.post(
                 Uri.parse("$url/member/register"),
@@ -2198,12 +2219,6 @@ class _RegisterPageState extends State<RegisterPage> {
                   children: [
                     InkWell(
                       onTap: () {
-                        // setState(() {
-                        //   sameLocationAaddressText.text = 'ddddddddd';
-                        //   sameLocationAaddress = false;
-                        //   textsameLocationAaddressWarningIsEmpty = '000000';
-                        //   checkTextsameLocationAaddressWarningIsEmpty = false;
-                        // });
                         Get.back();
                       },
                       child: Padding(
@@ -2304,90 +2319,125 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   void presstousecurrentlocation(context) async {
-    // ใช้ width สำหรับ horizontal
-    // left/right
-    double width = MediaQuery.of(context).size.width;
-    // ใช้ height สำหรับ vertical
-    // top/bottom
-    double height = MediaQuery.of(context).size.height;
-
-    Position position = await _determinePosition();
-    // LatLng latLng = const LatLng(16.25342, 103.2437483);
-    // เรียกใช้ฟังก์ชันเพื่อรับข้อมูลจังหวัด, อำเภอ และตำบล
-    Map<String, String> locationDetails =
-        await getLocationDetailsFromCoordinates(
-            position.latitude, position.longitude);
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (BuildContext context) {
-        return Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: width * 0.04,
-            vertical: height * 0.015,
-          ),
-          child: Container(
-            height: height * 0.4, // สามารถปรับขนาดได้ตามต้องการ
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    InkWell(
-                      onTap: () {
-                        Get.back();
-                      },
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: width * 0.01,
-                          vertical: height * 0.005,
-                        ),
-                        child: SvgPicture.string(
-                          '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12.707 17.293 8.414 13H18v-2H8.414l4.293-4.293-1.414-1.414L4.586 12l6.707 6.707z"></path></svg>',
-                          height: height * 0.03,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 20),
-                Text('ตำแหน่งปัจจุบันของคุณ:'),
-                Text('ละติจูด: ${position.latitude}'),
-                Text('ลองจิจูด: ${position.longitude}'), SizedBox(height: 10),
-                SizedBox(height: 10),
-                Text(
-                    'จังหวัด: ${locationDetails['province']}'), // แสดงชื่อจังหวัด
-                Text('อำเภอ: ${locationDetails['district']}'), // แสดงชื่ออำเภอ
-                Text('ตำบล: ${locationDetails['subDistrict']}'), // แสดงชื่อตำบล
-              ],
+    // เรียกใช้ฟังก์ชันเพื่อรับข้อมูลจังหวัด, อำเภอ, ตำบล, ข้อมูลรหัสไปรษณีย์
+    try {
+      Get.defaultDialog(
+        title: "",
+        titlePadding: EdgeInsets.zero,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: MediaQuery.of(context).size.width * 0.02,
+          vertical: MediaQuery.of(context).size.height * 0.02,
+        ),
+        content: Column(
+          children: [
+            const CircularProgressIndicator(),
+            SizedBox(height: MediaQuery.of(context).size.width * 0.03),
+            Text(
+              'กำลังค้นหาตำแหน่ง..',
+              style: TextStyle(
+                fontSize: Get.textTheme.titleLarge!.fontSize,
+                color: const Color(0xffaf4c31),
+              ),
             ),
-          ),
-        );
-      },
-    );
+            Text(
+              'เรากำลังค้นหาตำแหน่ง กรุณารอสักครู่...',
+              style: TextStyle(
+                fontSize: Get.textTheme.titleSmall!.fontSize,
+              ),
+            ),
+          ],
+        ),
+        barrierDismissible: false,
+      );
+      Position position = await _determinePosition();
+      Map<String, String> locationDetails =
+          await getLocationDetailsFromCoordinates(
+              position.latitude, position.longitude);
+      latlng.text = '${position.latitude},${position.longitude}';
+      sameLocationAaddressText.text =
+          '${locationDetails['province']} ${locationDetails['district']} ${locationDetails['subDistrict']} ${locationDetails['postalCode']}';
+      sameLocationAaddress = false;
+      textsameLocationAaddressWarningIsEmpty = '000000';
+      checkTextsameLocationAaddressWarningIsEmpty = false;
+      setState(() {});
+    } catch (e) {
+      Get.back();
+    } finally {
+      Get.back();
+    }
   }
 
   Future<Map<String, String>> getLocationDetailsFromCoordinates(
       double latitude, double longitude) async {
     final response = await http.get(Uri.parse(
-        'https://nominatim.openstreetmap.org/reverse?lat=$latitude&lon=$longitude&format=json'));
+        'https://maps.googleapis.com/maps/api/geocode/json?latlng=$latitude,$longitude&language=th&key=AIzaSyCCO43655qj2NvMx-o765XuddYontDAvRk'));
+
+    if (response.statusCode == 200) {
+      final jsonData = json.decode(response.body);
+      if (jsonData['results'].isNotEmpty) {
+        String province = '';
+        String district = '';
+        String subDistrict = '';
+        String postalCode = '';
+
+        for (var component in jsonData['results'][0]['address_components']) {
+          if (component['types'].contains('administrative_area_level_1')) {
+            province = component['long_name']; // จังหวัด
+          }
+          if (component['types'].contains('administrative_area_level_2')) {
+            district = component['long_name']; // อำเภอ
+          }
+          if (component['types'].contains('sublocality_level_1') ||
+              component['types'].contains('locality')) {
+            subDistrict = component['long_name']; // ตำบล
+          }
+          if (component['types'].contains('postal_code')) {
+            postalCode = component['long_name']; // ตำบล
+          }
+        }
+
+        return {
+          'province': province.isNotEmpty ? province : 'ไม่พบข้อมูลจังหวัด',
+          'district': district.isNotEmpty ? district : 'ไม่พบข้อมูลอำเภอ',
+          'subDistrict':
+              subDistrict.isNotEmpty ? subDistrict : 'ไม่พบข้อมูลตำบล',
+          'postalCode':
+              postalCode.isNotEmpty ? postalCode : 'ไม่พบข้อมูลรหัสไปรษณีย์',
+        };
+      } else {
+        return {
+          'province': 'ไม่พบข้อมูลจังหวัด',
+          'district': 'ไม่พบข้อมูลอำเภอ',
+          'subDistrict': 'ไม่พบข้อมูลตำบล',
+          'postalCode': 'ไม่พบข้อมูลรหัสไปรษณีย์',
+        };
+      }
+    } else {
+      throw Exception('Failed to load location details');
+    }
+  }
+
+  Future<Map<String, double>> getLatLngFromAddress(String address) async {
+    final response = await http.get(Uri.parse(
+        'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(address)}&components=country:TH&key=AIzaSyCCO43655qj2NvMx-o765XuddYontDAvRk'));
 
     if (response.statusCode == 200) {
       final jsonData = json.decode(response.body);
 
-      // ดึงข้อมูลจังหวัด, อำเภอ และตำบล
-      String province = jsonData['address']['province'] ?? 'ไม่พบข้อมูลจังหวัด';
-      String district = jsonData['address']['county'] ?? 'ไม่พบข้อมูลอำเภอ';
-      String subDistrict =
-          jsonData['address']['municipality'] ?? 'ไม่พบข้อมูลตำบล';
+      if (jsonData['results'].isNotEmpty) {
+        final location = jsonData['results'][0]['geometry']['location'];
+        final double lat = location['lat'];
+        final double lng = location['lng'];
 
-      return {
-        'province': province,
-        'district': district,
-        'subDistrict': subDistrict,
-      };
+        return {
+          'lat': lat,
+          'lng': lng,
+        }; // คืนค่า lat และ lng เป็น Map<String, double>
+      } else {
+        throw Exception('ไม่พบข้อมูลพิกัดสำหรับที่อยู่นี้');
+      }
     } else {
-      throw Exception('Failed to load location details');
+      throw Exception('Failed to get location');
     }
   }
 

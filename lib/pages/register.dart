@@ -6,10 +6,14 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:raidely/config/config.dart';
+import 'package:raidely/models/request/registerMemberPostRequest.dart';
 import 'package:raidely/models/request/registerRiderPostRequest.dart';
 import 'package:raidely/models/response/memberAllGetResponse.dart';
 import 'package:raidely/models/response/riderAllGetResponse.dart';
@@ -30,18 +34,21 @@ class _RegisterPageState extends State<RegisterPage> {
   String textPasswordCheckWarningIsEmpty = '898989';
   String textCarRegistrationWarningIsEmpty = '898989';
   String textAddressWarningIsEmpty = '898989';
+  String textsameLocationAaddressWarningIsEmpty = '898989';
   bool checkTextPhoneWarningIsEmpty = false;
   bool checkTextNameWarningIsEmpty = false;
   bool checkTextPasswordWarningIsEmpty = false;
   bool checkTextPasswordCheckWarningIsEmpty = false;
   bool checkTextCarRegistrationWarningIsEmpty = false;
   bool checkTextAddressWarningIsEmpty = false;
+  bool checkTextsameLocationAaddressWarningIsEmpty = false;
   TextEditingController phoneCth = TextEditingController();
   TextEditingController nameCth = TextEditingController();
   TextEditingController passwordCth = TextEditingController();
   TextEditingController passwordCheckCtl = TextEditingController();
   TextEditingController carRegistrationCtl = TextEditingController();
   TextEditingController addressCtl = TextEditingController();
+  TextEditingController sameLocationAaddressText = TextEditingController();
   bool selectType = false;
   String selectedType = '';
   bool isTyping = false;
@@ -52,6 +59,93 @@ class _RegisterPageState extends State<RegisterPage> {
   final ImagePicker picker = ImagePicker();
   XFile? image;
   File? savedFile;
+  String selectedProvince = '';
+  bool selectedProvinces = false;
+  List<String> provinces = [
+    "กรุงเทพมหานคร",
+    "กระบี่",
+    "กาญจนบุรี",
+    "กาฬสินธุ์",
+    "กำแพงเพชร",
+    "ขอนแก่น",
+    "จันทบุรี",
+    "ฉะเชิงเทรา",
+    "ชลบุรี",
+    "ชัยนาท",
+    "ชัยภูมิ",
+    "ชุมพร",
+    "เชียงใหม่",
+    "เชียงราย",
+    "ตรัง",
+    "ตราด",
+    "ตาก",
+    "นครนายก",
+    "นครปฐม",
+    "นครพนม",
+    "นครราชสีมา",
+    "นครศรีธรรมราช",
+    "นครสวรรค์",
+    "นนทบุรี",
+    "นราธิวาส",
+    "น่าน",
+    "บึงกาฬ",
+    "บุรีรัมย์",
+    "ปทุมธานี",
+    "ประจวบคีรีขันธ์",
+    "ปราจีนบุรี",
+    "ปัตตานี",
+    "พระนครศรีอยุธยา",
+    "พะเยา",
+    "พังงา",
+    "พัทลุง",
+    "พิจิตร",
+    "พิษณุโลก",
+    "เพชรบุรี",
+    "เพชรบูรณ์",
+    "แพร่",
+    "ภูเก็ต",
+    "มหาสารคาม",
+    "มุกดาหาร",
+    "แม่ฮ่องสอน",
+    "ยโสธร",
+    "ยะลา",
+    "ร้อยเอ็ด",
+    "ระนอง",
+    "ระยอง",
+    "ราชบุรี",
+    "ลพบุรี",
+    "ลำปาง",
+    "ลำพูน",
+    "เลย",
+    "ศรีสะเกษ",
+    "สกลนคร",
+    "สงขลา",
+    "สตูล",
+    "สมุทรปราการ",
+    "สมุทรสงคราม",
+    "สมุทรสาคร",
+    "สระแก้ว",
+    "สระบุรี",
+    "สิงห์บุรี",
+    "สุโขทัย",
+    "สุพรรณบุรี",
+    "สุราษฎร์ธานี",
+    "สุรินทร์",
+    "หนองคาย",
+    "หนองบัวลำภู",
+    "อ่างทอง",
+    "อำนาจเจริญ",
+    "อุดรธานี",
+    "อุตรดิตถ์",
+    "อุทัยธานี",
+    "อุบลราชธานี",
+  ];
+
+  @override
+  void initState() {
+    sameLocationAaddressText.text = 'เลือกตำแหน่ง';
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -115,12 +209,15 @@ class _RegisterPageState extends State<RegisterPage> {
                     textPasswordCheckWarningIsEmpty = '898989';
                     textCarRegistrationWarningIsEmpty = '898989';
                     textAddressWarningIsEmpty = '898989';
+                    textsameLocationAaddressWarningIsEmpty = '898989';
                     checkTextPhoneWarningIsEmpty = false;
                     checkTextNameWarningIsEmpty = false;
                     checkTextPasswordWarningIsEmpty = false;
                     checkTextPasswordCheckWarningIsEmpty = false;
                     checkTextCarRegistrationWarningIsEmpty = false;
                     checkTextAddressWarningIsEmpty = false;
+                    checkTextsameLocationAaddressWarningIsEmpty = false;
+                    sameLocationAaddress = false;
                   });
                 },
               )
@@ -854,8 +951,10 @@ class _RegisterPageState extends State<RegisterPage> {
                                       hintStyle: TextStyle(
                                         fontSize:
                                             Get.textTheme.titleSmall!.fontSize,
-                                        color: Color(int.parse(
-                                            '0xff$textAddressWarningIsEmpty')),
+                                        color: Color(
+                                          int.parse(
+                                              '0xff$textAddressWarningIsEmpty'),
+                                        ),
                                       ),
                                       constraints: BoxConstraints(
                                         maxHeight: height * 0.05,
@@ -950,7 +1049,8 @@ class _RegisterPageState extends State<RegisterPage> {
                                                       fontSize: Get.textTheme
                                                           .labelSmall!.fontSize,
                                                       color: const Color(
-                                                          0xff898989),
+                                                        0xff898989,
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
@@ -981,39 +1081,87 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                             ),
                           if (selectedType == 'ผู้ใช้')
-                            TextButton(
-                              onPressed: () {
-                                locationSelected(context);
-                              },
-                              style: TextButton.styleFrom(
-                                fixedSize: Size(
-                                  width,
-                                  height * 0.05,
-                                ),
-                                backgroundColor: const Color(0xff8B8B8B),
-                                elevation: 3, //เงาล่าง
-                                shadowColor: Colors.black,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.circular(12), // มุมโค้งมน
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  SvgPicture.string(
-                                    '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 14c2.206 0 4-1.794 4-4s-1.794-4-4-4-4 1.794-4 4 1.794 4 4 4zm0-6c1.103 0 2 .897 2 2s-.897 2-2 2-2-.897-2-2 .897-2 2-2z"></path><path d="M11.42 21.814a.998.998 0 0 0 1.16 0C12.884 21.599 20.029 16.44 20 10c0-4.411-3.589-8-8-8S4 5.589 4 9.995c-.029 6.445 7.116 11.604 7.42 11.819zM12 4c3.309 0 6 2.691 6 6.005.021 4.438-4.388 8.423-6 9.73-1.611-1.308-6.021-5.294-6-9.735 0-3.309 2.691-6 6-6z"></path></svg>',
-                                  ),
-                                  Text(
-                                    "เลือกตำแหน่ง",
-                                    style: TextStyle(
-                                      fontSize:
-                                          Get.textTheme.titleMedium!.fontSize,
-                                      color: const Color.fromARGB(255, 0, 0, 0),
+                            Stack(
+                              children: [
+                                TextButton(
+                                  onPressed: () {
+                                    locationSelected(context);
+                                  },
+                                  style: TextButton.styleFrom(
+                                    fixedSize: Size(
+                                      width,
+                                      height * 0.05,
+                                    ),
+                                    backgroundColor: const Color(0xff8B8B8B),
+                                    elevation: 3, // เงาล่าง
+                                    shadowColor: Colors.black,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                          12), // มุมโค้งมน
                                     ),
                                   ),
-                                ],
-                              ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      SvgPicture.string(
+                                        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 14c2.206 0 4-1.794 4-4s-1.794-4-4-4-4 1.794-4 4 1.794 4 4 4zm0-6c1.103 0 2 .897 2 2s-.897 2-2 2-2-.897-2-2 .897-2 2-2z"></path><path d="M11.42 21.814a.998.998 0 0 0 1.16 0C12.884 21.599 20.029 16.44 20 10c0-4.411-3.589-8-8-8S4 5.589 4 9.995c-.029 6.445 7.116 11.604 7.42 11.819zM12 4c3.309 0 6 2.691 6 6.005.021 4.438-4.388 8.423-6 9.73-1.611-1.308-6.021-5.294-6-9.735 0-3.309 2.691-6 6-6z"></path></svg>',
+                                      ),
+                                      !sameLocationAaddress
+                                          ? Text(
+                                              sameLocationAaddressText.text,
+                                              style: TextStyle(
+                                                fontSize: Get.textTheme
+                                                    .titleMedium!.fontSize,
+                                                color:
+                                                    !checkTextsameLocationAaddressWarningIsEmpty
+                                                        ? Colors.black
+                                                        : Color(
+                                                            int.parse(
+                                                              '0xff$textsameLocationAaddressWarningIsEmpty',
+                                                            ),
+                                                          ),
+                                              ),
+                                            )
+                                          : Container(
+                                              constraints: BoxConstraints(
+                                                  maxWidth: width *
+                                                      0.6), // จำกัดความกว้างของข้อความ
+                                              child: Text(
+                                                sameLocationAaddressText.text,
+                                                style: TextStyle(
+                                                  fontSize: Get.textTheme
+                                                      .titleMedium!.fontSize,
+                                                  color:
+                                                      !checkTextsameLocationAaddressWarningIsEmpty
+                                                          ? Colors.black
+                                                          : Color(
+                                                              int.parse(
+                                                                '0xff$textsameLocationAaddressWarningIsEmpty',
+                                                              ),
+                                                            ),
+                                                ),
+                                                maxLines:
+                                                    1, // จำกัดการแสดงผลให้อยู่ในบรรทัดเดียว
+                                                overflow: TextOverflow
+                                                    .ellipsis, // แสดง ... เมื่อข้อความยาวเกิน
+                                              ),
+                                            ),
+                                    ],
+                                  ),
+                                ),
+                                if (checkTextsameLocationAaddressWarningIsEmpty)
+                                  Positioned(
+                                    top: 0,
+                                    bottom: 0,
+                                    left: width * 0.02,
+                                    child: SvgPicture.string(
+                                      '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"></path><path d="M11 11h2v6h-2zm0-4h2v2h-2z"></path></svg>',
+                                      width: width * 0.025,
+                                      height: height * 0.025,
+                                      color: Colors.red,
+                                    ),
+                                  ),
+                              ],
                             ),
                           if (selectedType == 'ไรเดอร์')
                             SizedBox(height: height * 0.03),
@@ -1572,13 +1720,350 @@ class _RegisterPageState extends State<RegisterPage> {
           textPasswordCheckWarningIsEmpty = '898989';
           textCarRegistrationWarningIsEmpty = '898989';
           textAddressWarningIsEmpty = '898989';
+          textsameLocationAaddressWarningIsEmpty = '898989';
           checkTextPhoneWarningIsEmpty = false;
           checkTextNameWarningIsEmpty = false;
           checkTextPasswordWarningIsEmpty = false;
           checkTextPasswordCheckWarningIsEmpty = false;
           checkTextCarRegistrationWarningIsEmpty = false;
           checkTextAddressWarningIsEmpty = false;
+          checkTextsameLocationAaddressWarningIsEmpty = false;
         });
+        //ถ้าเบอร์โทรถูกต้อง
+        if (phoneCth.text.length == 10) {
+          //ถ้าหาก phoneMembers,phoneRiders ตรงกันกับที่ user พิมมา แสดงว่าเบอร์ซ้ำสมัครบ่ได่
+          if (phoneMembers.contains(phoneCth.text) ||
+              phoneRiders.contains(phoneCth.text)) {
+            Get.defaultDialog(
+              title: "",
+              titlePadding: EdgeInsets.zero,
+              content: Column(
+                children: [
+                  Image.asset(
+                    'assets/images/warning.png',
+                    width: MediaQuery.of(context).size.width * 0.16,
+                    height: MediaQuery.of(context).size.width * 0.16,
+                    fit: BoxFit.cover,
+                  ),
+                  SizedBox(height: MediaQuery.of(context).size.width * 0.03),
+                  Text(
+                    'ไม่สามารถสมัครสมาชิกได้!',
+                    style: TextStyle(
+                      fontSize: Get.textTheme.titleLarge!.fontSize,
+                    ),
+                  ),
+                  SizedBox(height: MediaQuery.of(context).size.width * 0.02),
+                  Text(
+                    'เนื่องจากมีเบอร์ผู้ใช้นี้แล้ว.',
+                    style: TextStyle(
+                      fontSize: Get.textTheme.labelMedium!.fontSize,
+                      color: Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+              barrierDismissible: false,
+              actions: [
+                ElevatedButton(
+                  onPressed: () {
+                    Get.back();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    fixedSize: Size(
+                      MediaQuery.of(context).size.width * 0.3,
+                      MediaQuery.of(context).size.height * 0.05,
+                    ),
+                    backgroundColor: const Color(0xffFEF7E7),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                  ),
+                  child: Text(
+                    'ยืนยัน',
+                    style: TextStyle(
+                      fontSize: Get.textTheme.titleSmall!.fontSize,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          } else {
+            //ถ้า password ตรงกัน
+            if (passwordCth.text == passwordCheckCtl.text) {
+              //ถ้ามีการจิ้ม 'ตำแหน่งเดียวกันกับที่อยู่'
+              if (sameLocationAaddress) {
+                //ถ้าหากช่อง address ไม่ว่าง
+                if (addressCtl.text.isNotEmpty) {
+                  //ถ้ามีการจิ้มตำแหน่งเดียวกันกับที่อยู่
+                  setState(() {
+                    //เอาช่อง address มาใส่ในช่อง sameLocation
+                    sameLocationAaddressText.text = addressCtl.text;
+                    //เปลี่ยนสีเดิมกลับ
+                    checkTextsameLocationAaddressWarningIsEmpty = false;
+                  });
+                } else {
+                  setState(() {
+                    //ถ้าหากช่อง address ว่าง
+                    sameLocationAaddressText.text = 'เลือกตำแหน่ง';
+                    //เปลี่ยนสีเเดง
+                    textsameLocationAaddressWarningIsEmpty = 'ff0000';
+                    checkTextsameLocationAaddressWarningIsEmpty = true;
+                  });
+                }
+              } else {
+                //ถ้าไม่มีการจิ้ม 'ตำแหน่งเดียวกันกับที่อยู่'
+                if (sameLocationAaddressText.text.isNotEmpty) {
+                  if (!checkTextsameLocationAaddressWarningIsEmpty) {
+                    if (sameLocationAaddressText.text == 'เลือกตำแหน่ง') {
+                      setState(() {
+                        textsameLocationAaddressWarningIsEmpty = 'ff0000';
+                        checkTextsameLocationAaddressWarningIsEmpty = true;
+                      });
+                    } else {
+                      //ถ้ามีการเลือกตำแหน่งผ่าน showModalBottomSheet
+                    }
+                  } else {
+                    setState(() {
+                      textsameLocationAaddressWarningIsEmpty = 'ff0000';
+                      checkTextsameLocationAaddressWarningIsEmpty = true;
+                    });
+                  }
+                } else {
+                  setState(() {
+                    textsameLocationAaddressWarningIsEmpty = '000000';
+                    checkTextsameLocationAaddressWarningIsEmpty = false;
+                  });
+                }
+              }
+              String downloadUrl = "";
+              if (savedFile != null) {
+                // แสดง Loading Indicator
+                Get.defaultDialog(
+                  title: "",
+                  titlePadding: EdgeInsets.zero,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: MediaQuery.of(context).size.width * 0.02,
+                    vertical: MediaQuery.of(context).size.height * 0.02,
+                  ),
+                  content: Column(
+                    children: [
+                      const CircularProgressIndicator(),
+                      SizedBox(
+                          height: MediaQuery.of(context).size.width * 0.03),
+                      Text(
+                        'กำลังบันทึกข้อมูล..',
+                        style: TextStyle(
+                          fontSize: Get.textTheme.titleLarge!.fontSize,
+                          color: const Color(0xffaf4c31),
+                        ),
+                      ),
+                      Text(
+                        'เรากำลังบันทึกข้อมูล กรุณารอสักครู่...',
+                        style: TextStyle(
+                          fontSize: Get.textTheme.titleSmall!.fontSize,
+                        ),
+                      ),
+                    ],
+                  ),
+                  barrierDismissible: false,
+                );
+
+                try {
+                  // สร้างอ้างอิงไปยัง Firebase Storage
+                  Reference storageReference = FirebaseStorage.instance.ref().child(
+                      'uploads/${DateTime.now().millisecondsSinceEpoch}_${savedFile!.path.split('/').last}');
+
+                  // อัพโหลดไฟล์และรอจนกว่าจะเสร็จสิ้น
+                  UploadTask uploadTask = storageReference.putFile(savedFile!);
+                  TaskSnapshot taskSnapshot = await uploadTask;
+
+                  // รับ URL ของรูปที่อัพโหลดสำเร็จ
+                  downloadUrl = await taskSnapshot.ref.getDownloadURL();
+                } catch (e) {
+                } finally {
+                  // ปิด Loading Indicator
+                  Get.back();
+                }
+              }
+              RegisterMemberPostRequest jsonRegisterMember =
+                  RegisterMemberPostRequest(
+                name: nameCth.text,
+                phone: phoneCth.text,
+                password: passwordCth.text,
+                address: addressCtl.text,
+                gps: sameLocationAaddressText.text,
+                imageMember: savedFile != null ? downloadUrl : "-",
+              );
+
+              var responsePostJsonRegisterMember = await http.post(
+                Uri.parse("$url/member/register"),
+                headers: {"Content-Type": "application/json; charset=utf-8"},
+                body: registerMemberPostRequestToJson(jsonRegisterMember),
+              );
+
+              if (responsePostJsonRegisterMember.statusCode == 200) {
+                Get.defaultDialog(
+                  title: "",
+                  titlePadding: EdgeInsets.zero,
+                  content: Column(
+                    children: [
+                      Image.asset(
+                        'assets/images/success.png',
+                        width: MediaQuery.of(context).size.width * 0.16,
+                        height: MediaQuery.of(context).size.width * 0.16,
+                        fit: BoxFit.cover,
+                      ),
+                      SizedBox(
+                          height: MediaQuery.of(context).size.width * 0.03),
+                      Text(
+                        'สมัครสมาชิกสำเร็จ!',
+                        style: TextStyle(
+                          fontSize: Get.textTheme.titleLarge!.fontSize,
+                        ),
+                      ),
+                    ],
+                  ),
+                  barrierDismissible: false,
+                  actions: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Get.to(() => const LoginPage());
+                      },
+                      style: ElevatedButton.styleFrom(
+                        fixedSize: Size(
+                          MediaQuery.of(context).size.width * 0.3,
+                          MediaQuery.of(context).size.height * 0.05,
+                        ),
+                        backgroundColor: const Color(0xffFEF7E7),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                      ),
+                      child: Text(
+                        'ยืนยัน',
+                        style: TextStyle(
+                          fontSize: Get.textTheme.titleSmall!.fontSize,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              }
+            } else {
+              Get.defaultDialog(
+                title: "",
+                titlePadding: EdgeInsets.zero,
+                content: Column(
+                  children: [
+                    Image.asset(
+                      'assets/images/warning.png',
+                      width: MediaQuery.of(context).size.width * 0.16,
+                      height: MediaQuery.of(context).size.width * 0.16,
+                      fit: BoxFit.cover,
+                    ),
+                    SizedBox(height: MediaQuery.of(context).size.width * 0.03),
+                    Text(
+                      'รหัสผ่านของคุณไม่ตรงกัน!',
+                      style: TextStyle(
+                        fontSize: Get.textTheme.titleLarge!.fontSize,
+                      ),
+                    ),
+                    SizedBox(height: MediaQuery.of(context).size.width * 0.02),
+                    Text(
+                      'โปรดตรวจสอบรหัสผ่านของท่านอีกครั้ง.',
+                      style: TextStyle(
+                        fontSize: Get.textTheme.titleSmall!.fontSize,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+                barrierDismissible: false,
+                actions: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Get.back();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      fixedSize: Size(
+                        MediaQuery.of(context).size.width * 0.3,
+                        MediaQuery.of(context).size.height * 0.05,
+                      ),
+                      backgroundColor: const Color(0xffFEF7E7),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                    child: Text(
+                      'ยืนยัน',
+                      style: TextStyle(
+                        fontSize: Get.textTheme.titleSmall!.fontSize,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }
+          }
+        } else {
+          Get.defaultDialog(
+            title: "",
+            titlePadding: EdgeInsets.zero,
+            content: Column(
+              children: [
+                Image.asset(
+                  'assets/images/warning.png',
+                  width: MediaQuery.of(context).size.width * 0.16,
+                  height: MediaQuery.of(context).size.width * 0.16,
+                  fit: BoxFit.cover,
+                ),
+                SizedBox(height: MediaQuery.of(context).size.width * 0.03),
+                Text(
+                  'เบอร์โทรศัพท์ไม่ถูกต้อง!',
+                  style: TextStyle(
+                    fontSize: Get.textTheme.titleLarge!.fontSize,
+                  ),
+                ),
+                SizedBox(height: MediaQuery.of(context).size.width * 0.02),
+                Text(
+                  'โปรดตรวจสอบเบอร์โทรศัพท์ของท่านอีกครั้ง.',
+                  style: TextStyle(
+                    fontSize: Get.textTheme.labelMedium!.fontSize,
+                    color: Colors.red,
+                  ),
+                ),
+              ],
+            ),
+            barrierDismissible: false,
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Get.back();
+                },
+                style: ElevatedButton.styleFrom(
+                  fixedSize: Size(
+                    MediaQuery.of(context).size.width * 0.3,
+                    MediaQuery.of(context).size.height * 0.05,
+                  ),
+                  backgroundColor: const Color(0xffFEF7E7),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+                child: Text(
+                  'ยืนยัน',
+                  style: TextStyle(
+                    fontSize: Get.textTheme.titleSmall!.fontSize,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
       } else {
         //แสดงสีป้อนข้อมูล
         if (phoneCth.text.isEmpty) {
@@ -1629,11 +2114,35 @@ class _RegisterPageState extends State<RegisterPage> {
           setState(() {
             textAddressWarningIsEmpty = 'ff0000';
             checkTextAddressWarningIsEmpty = true;
+            if (sameLocationAaddressText.text == 'เลือกตำแหน่ง') {
+              textsameLocationAaddressWarningIsEmpty = 'ff0000';
+              checkTextsameLocationAaddressWarningIsEmpty = true;
+            }
+            if (sameLocationAaddress) {
+              sameLocationAaddress = false;
+              sameLocationAaddressText.text = 'เลือกตำแหน่ง';
+            }
           });
         } else {
           setState(() {
             textAddressWarningIsEmpty = '898989';
             checkTextAddressWarningIsEmpty = false;
+          });
+        }
+        if (sameLocationAaddressText.text.isEmpty) {
+          setState(() {
+            textsameLocationAaddressWarningIsEmpty = 'ff0000';
+            checkTextsameLocationAaddressWarningIsEmpty = true;
+          });
+        } else {
+          setState(() {
+            if (sameLocationAaddressText.text == 'เลือกตำแหน่ง') {
+              textsameLocationAaddressWarningIsEmpty = 'ff0000';
+              checkTextsameLocationAaddressWarningIsEmpty = true;
+            } else {
+              textsameLocationAaddressWarningIsEmpty = '898989';
+              checkTextsameLocationAaddressWarningIsEmpty = false;
+            }
           });
         }
       }
@@ -1643,6 +2152,19 @@ class _RegisterPageState extends State<RegisterPage> {
   void sameLocationAsAaddress(bool? value) {
     setState(() {
       sameLocationAaddress = value ?? !sameLocationAaddress;
+
+      if (sameLocationAaddress) {
+        if (addressCtl.text.isNotEmpty) {
+          sameLocationAaddressText.text = addressCtl.text;
+          checkTextsameLocationAaddressWarningIsEmpty = false;
+        } else {
+          sameLocationAaddressText.text = 'เลือกตำแหน่ง';
+          textsameLocationAaddressWarningIsEmpty = 'ff0000';
+          checkTextsameLocationAaddressWarningIsEmpty = true;
+        }
+      } else {
+        sameLocationAaddressText.text = 'เลือกตำแหน่ง';
+      }
     });
   }
 
@@ -1676,6 +2198,12 @@ class _RegisterPageState extends State<RegisterPage> {
                   children: [
                     InkWell(
                       onTap: () {
+                        // setState(() {
+                        //   sameLocationAaddressText.text = 'ddddddddd';
+                        //   sameLocationAaddress = false;
+                        //   textsameLocationAaddressWarningIsEmpty = '000000';
+                        //   checkTextsameLocationAaddressWarningIsEmpty = false;
+                        // });
                         Get.back();
                       },
                       child: Padding(
@@ -1685,17 +2213,218 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                         child: SvgPicture.string(
                           '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12.707 17.293 8.414 13H18v-2H8.414l4.293-4.293-1.414-1.414L4.586 12l6.707 6.707z"></path></svg>',
-                          height: height * 0.04,
+                          height: height * 0.03,
                         ),
                       ),
                     ),
                   ],
                 ),
+                ElevatedButton(
+                  onPressed: () => presstousecurrentlocation(context),
+                  style: ElevatedButton.styleFrom(
+                    fixedSize: Size(
+                      width * 0.8,
+                      height * 0.05,
+                    ),
+                    backgroundColor: const Color(0xffFEF7E7),
+                    elevation: 2, //เงาล่าง
+                    shadowColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12), // มุมโค้งมน
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SvgPicture.string(
+                        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 2C7.589 2 4 5.589 4 9.995 3.971 16.44 11.696 21.784 12 22c0 0 8.029-5.56 8-12 0-4.411-3.589-8-8-8zm0 12c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"></path></svg>',
+                        color: Colors.red,
+                      ),
+                      Text(
+                        'ใช้ตำแหน่งปัจจุบัน',
+                        style: TextStyle(
+                          fontSize: Get.textTheme.titleMedium!.fontSize,
+                          color: Colors.black,
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+                SizedBox(height: height * 0.02),
+                Row(
+                  children: [
+                    Text(
+                      'จังหวัด',
+                      style: TextStyle(
+                        fontSize: Get.textTheme.titleLarge!.fontSize,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: height * 0.02),
+                Expanded(
+                  child: ListView.builder(
+                    padding: EdgeInsets.zero,
+                    itemCount: provinces.length,
+                    itemBuilder: (context, index) {
+                      return Column(
+                        children: [
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: InkWell(
+                              onTap: () {
+                                selectedProvince = provinces[index];
+                              },
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: width * 0.02,
+                                  vertical: height * 0.01,
+                                ),
+                                child: Text(provinces[index]),
+                              ),
+                            ),
+                          ),
+                          const Divider(
+                            // เส้นแบ่งระหว่างจังหวัด
+                            color: Colors.grey, // สีของเส้นแบ่ง
+                            thickness: 1, // ความหนาของเส้นแบ่ง
+                            height: 0,
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                )
               ],
             ),
           ),
         );
       },
     );
+  }
+
+  void presstousecurrentlocation(context) async {
+    // ใช้ width สำหรับ horizontal
+    // left/right
+    double width = MediaQuery.of(context).size.width;
+    // ใช้ height สำหรับ vertical
+    // top/bottom
+    double height = MediaQuery.of(context).size.height;
+
+    Position position = await _determinePosition();
+    // LatLng latLng = const LatLng(16.25342, 103.2437483);
+    // เรียกใช้ฟังก์ชันเพื่อรับข้อมูลจังหวัด, อำเภอ และตำบล
+    Map<String, String> locationDetails =
+        await getLocationDetailsFromCoordinates(
+            position.latitude, position.longitude);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (BuildContext context) {
+        return Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: width * 0.04,
+            vertical: height * 0.015,
+          ),
+          child: Container(
+            height: height * 0.4, // สามารถปรับขนาดได้ตามต้องการ
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        Get.back();
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: width * 0.01,
+                          vertical: height * 0.005,
+                        ),
+                        child: SvgPicture.string(
+                          '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12.707 17.293 8.414 13H18v-2H8.414l4.293-4.293-1.414-1.414L4.586 12l6.707 6.707z"></path></svg>',
+                          height: height * 0.03,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 20),
+                Text('ตำแหน่งปัจจุบันของคุณ:'),
+                Text('ละติจูด: ${position.latitude}'),
+                Text('ลองจิจูด: ${position.longitude}'), SizedBox(height: 10),
+                SizedBox(height: 10),
+                Text(
+                    'จังหวัด: ${locationDetails['province']}'), // แสดงชื่อจังหวัด
+                Text('อำเภอ: ${locationDetails['district']}'), // แสดงชื่ออำเภอ
+                Text('ตำบล: ${locationDetails['subDistrict']}'), // แสดงชื่อตำบล
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<Map<String, String>> getLocationDetailsFromCoordinates(
+      double latitude, double longitude) async {
+    final response = await http.get(Uri.parse(
+        'https://nominatim.openstreetmap.org/reverse?lat=$latitude&lon=$longitude&format=json'));
+
+    if (response.statusCode == 200) {
+      final jsonData = json.decode(response.body);
+
+      // ดึงข้อมูลจังหวัด, อำเภอ และตำบล
+      String province = jsonData['address']['province'] ?? 'ไม่พบข้อมูลจังหวัด';
+      String district = jsonData['address']['county'] ?? 'ไม่พบข้อมูลอำเภอ';
+      String subDistrict =
+          jsonData['address']['municipality'] ?? 'ไม่พบข้อมูลตำบล';
+
+      return {
+        'province': province,
+        'district': district,
+        'subDistrict': subDistrict,
+      };
+    } else {
+      throw Exception('Failed to load location details');
+    }
+  }
+
+  Future<Position> _determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Test if location services are enabled.
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // Location services are not enabled don't continue
+      // accessing the position and request users of the
+      // App to enable the location services.
+      return Future.error('Location services are disabled.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        // Permissions are denied, next time you could try
+        // requesting permissions again (this is also where
+        // Android's shouldShowRequestPermissionRationale
+        // returned true. According to Android guidelines
+        // your App should show an explanatory UI now.
+        return Future.error('Location permissions are denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      // Permissions are denied forever, handle appropriately.
+      return Future.error(
+          'Location permissions are permanently denied, we cannot request permissions.');
+    }
+
+    // When we reach here, permissions are granted and we can
+    // continue accessing the position of the device.
+    return await Geolocator.getCurrentPosition();
   }
 }

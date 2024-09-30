@@ -2370,7 +2370,7 @@ class _RegisterPageState extends State<RegisterPage> {
   Future<Map<String, String>> getLocationDetailsFromCoordinates(
       double latitude, double longitude) async {
     final response = await http.get(Uri.parse(
-        'https://maps.googleapis.com/maps/api/geocode/json?latlng=$latitude,$longitude&language=th&key=AIzaSyCCO43655qj2NvMx-o765XuddYontDAvRk'));
+        'https://maps.googleapis.com/maps/api/geocode/json?latlng=$latitude,$longitude&language=th&key='));
 
     if (response.statusCode == 200) {
       final jsonData = json.decode(response.body);
@@ -2419,7 +2419,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   Future<Map<String, double>> getLatLngFromAddress(String address) async {
     final response = await http.get(Uri.parse(
-        'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(address)}&components=country:TH&key=AIzaSyCCO43655qj2NvMx-o765XuddYontDAvRk'));
+        'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(address)}&components=country:TH&key='));
 
     if (response.statusCode == 200) {
       final jsonData = json.decode(response.body);

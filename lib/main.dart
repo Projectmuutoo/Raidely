@@ -38,7 +38,7 @@ class MainApp extends StatelessWidget {
         fontFamily: 'itim',
         scaffoldBackgroundColor: Colors.white,
       ),
-      home:const LoginPage(),
+      home: const LoginPage(),
     );
   }
 }

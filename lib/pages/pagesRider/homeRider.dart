@@ -8,8 +8,8 @@ import 'package:provider/provider.dart';
 import 'package:raidely/config/config.dart';
 import 'package:raidely/models/response/byPhoneRiderGetResponse.dart';
 import 'package:raidely/pages/login.dart';
-import 'package:raidely/pages/pagesMember/profileUser.dart';
 import 'package:http/http.dart' as http;
+import 'package:raidely/pages/pagesRider/getOrder.dart';
 import 'package:raidely/shared/appData.dart';
 
 class HomeriderPage extends StatefulWidget {
@@ -48,17 +48,19 @@ class _HomeriderPageState extends State<HomeriderPage> {
     double height = MediaQuery.of(context).size.height;
 
     return FutureBuilder(
-        future: loadData,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return Container(
-              color: Colors.white,
-              child: const Center(
-                child: CircularProgressIndicator(),
-              ),
-            );
-          }
-          return Scaffold(
+      future: loadData,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return Container(
+            color: Colors.white,
+            child: const Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+        return PopScope(
+          canPop: false,
+          child: Scaffold(
             appBar: PreferredSize(
               preferredSize: Size(
                 width,
@@ -114,8 +116,7 @@ class _HomeriderPageState extends State<HomeriderPage> {
                           horizontal: width * 0.02,
                         ),
                         child: Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start, // จัดตัวอักษรแนวตั้ง
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               resultsResponseRiderBody[0].name,
@@ -130,13 +131,37 @@ class _HomeriderPageState extends State<HomeriderPage> {
                     ],
                   ),
                   backgroundColor: Colors.white,
-                  elevation: 1,
+                  elevation: 0,
                   automaticallyImplyLeading: false,
                 ),
               ),
             ),
-            body: Container(),
-          );
-        });
+            body: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  RefreshIndicator(
+                    onRefresh: loadDataAsync,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Column(
+                        children: [
+                          FilledButton(
+                            onPressed: () {
+                              Get.to(() => const GetorderPage());
+                            },
+                            child: Text('getOrder'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 }

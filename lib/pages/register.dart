@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
@@ -6,12 +7,11 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
+import 'package:google_maps_place_picker_mb/google_maps_place_picker.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:map_location_picker/map_location_picker.dart';
 import 'package:raidely/config/config.dart';
 import 'package:raidely/models/request/registerMemberPostRequest.dart';
 import 'package:raidely/models/request/registerRiderPostRequest.dart';
@@ -50,97 +50,16 @@ class _RegisterPageState extends State<RegisterPage> {
   TextEditingController addressCtl = TextEditingController();
   TextEditingController sameLocationAaddressText = TextEditingController();
   TextEditingController latlng = TextEditingController();
+  TextEditingController sameLocationAaddresstextShow = TextEditingController();
   bool selectType = false;
   String selectedType = '';
   bool isTyping = false;
   bool _isCheckedPassword = true;
   bool _isCheckedPassword2 = true;
   bool openInfoCarRegistration = true;
-  bool sameLocationAaddress = false;
   final ImagePicker picker = ImagePicker();
   XFile? image;
   File? savedFile;
-  String selectedProvince = '';
-  bool selectedProvinces = false;
-  List<String> provinces = [
-    "กรุงเทพมหานคร",
-    "กระบี่",
-    "กาญจนบุรี",
-    "กาฬสินธุ์",
-    "กำแพงเพชร",
-    "ขอนแก่น",
-    "จันทบุรี",
-    "ฉะเชิงเทรา",
-    "ชลบุรี",
-    "ชัยนาท",
-    "ชัยภูมิ",
-    "ชุมพร",
-    "เชียงใหม่",
-    "เชียงราย",
-    "ตรัง",
-    "ตราด",
-    "ตาก",
-    "นครนายก",
-    "นครปฐม",
-    "นครพนม",
-    "นครราชสีมา",
-    "นครศรีธรรมราช",
-    "นครสวรรค์",
-    "นนทบุรี",
-    "นราธิวาส",
-    "น่าน",
-    "บึงกาฬ",
-    "บุรีรัมย์",
-    "ปทุมธานี",
-    "ประจวบคีรีขันธ์",
-    "ปราจีนบุรี",
-    "ปัตตานี",
-    "พระนครศรีอยุธยา",
-    "พะเยา",
-    "พังงา",
-    "พัทลุง",
-    "พิจิตร",
-    "พิษณุโลก",
-    "เพชรบุรี",
-    "เพชรบูรณ์",
-    "แพร่",
-    "ภูเก็ต",
-    "มหาสารคาม",
-    "มุกดาหาร",
-    "แม่ฮ่องสอน",
-    "ยโสธร",
-    "ยะลา",
-    "ร้อยเอ็ด",
-    "ระนอง",
-    "ระยอง",
-    "ราชบุรี",
-    "ลพบุรี",
-    "ลำปาง",
-    "ลำพูน",
-    "เลย",
-    "ศรีสะเกษ",
-    "สกลนคร",
-    "สงขลา",
-    "สตูล",
-    "สมุทรปราการ",
-    "สมุทรสงคราม",
-    "สมุทรสาคร",
-    "สระแก้ว",
-    "สระบุรี",
-    "สิงห์บุรี",
-    "สุโขทัย",
-    "สุพรรณบุรี",
-    "สุราษฎร์ธานี",
-    "สุรินทร์",
-    "หนองคาย",
-    "หนองบัวลำภู",
-    "อ่างทอง",
-    "อำนาจเจริญ",
-    "อุดรธานี",
-    "อุตรดิตถ์",
-    "อุทัยธานี",
-    "อุบลราชธานี",
-  ];
 
   @override
   void initState() {
@@ -218,7 +137,6 @@ class _RegisterPageState extends State<RegisterPage> {
                     checkTextCarRegistrationWarningIsEmpty = false;
                     checkTextAddressWarningIsEmpty = false;
                     checkTextsameLocationAaddressWarningIsEmpty = false;
-                    sameLocationAaddress = false;
                   });
                 },
               )
@@ -333,7 +251,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                             ),
                                           ),
                                         )
-                                      : SizedBox.shrink(),
+                                      : const SizedBox.shrink(),
                                   Container(
                                     height: height * 0.1,
                                     decoration: const BoxDecoration(
@@ -942,7 +860,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                   ),
                                   child: TextField(
                                     controller: addressCtl,
-                                    keyboardType: TextInputType.multiline,
+                                    keyboardType: TextInputType.text,
                                     cursorColor: Colors.black,
                                     maxLines: null, // รองรับหลายบรรทัด
                                     decoration: InputDecoration(
@@ -1025,58 +943,27 @@ class _RegisterPageState extends State<RegisterPage> {
                                       ),
                                     ],
                                   ),
-                                  Row(
-                                    children: [
-                                      Padding(
-                                        padding: EdgeInsets.only(
-                                          left: width * 0.04,
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            InkWell(
-                                              onTap: () {
-                                                sameLocationAsAaddress(
-                                                    !sameLocationAaddress);
-                                              },
-                                              child: Padding(
-                                                padding: EdgeInsets.symmetric(
-                                                  horizontal: width * 0.02,
-                                                  vertical: height * 0.005,
-                                                ),
-                                                child: SizedBox(
-                                                  child: Text(
-                                                    'ตำแหน่งเดียวกับที่อยู่',
-                                                    style: TextStyle(
-                                                      fontSize: Get.textTheme
-                                                          .labelSmall!.fontSize,
-                                                      color: const Color(
-                                                        0xff898989,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            Transform.scale(
-                                              scale: 1.1,
-                                              child: SizedBox(
-                                                width: width * 0.035,
-                                                height: height * 0.035,
-                                                child: Checkbox(
-                                                  activeColor:
-                                                      const Color(0xFF51281D),
-                                                  value: sameLocationAaddress,
-                                                  onChanged: (bool? value) {
-                                                    sameLocationAsAaddress(
-                                                        value);
-                                                  },
-                                                ),
-                                              ),
-                                            ),
-                                          ],
+                                  InkWell(
+                                    onTap: () {
+                                      sameLocationAaddressText.text =
+                                          'เลือกตำแหน่ง';
+                                      sameLocationAaddresstextShow.clear();
+                                      setState(() {});
+                                    },
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: width * 0.02,
+                                        vertical: height * 0.005,
+                                      ),
+                                      child: Text(
+                                        'ล้าง',
+                                        style: TextStyle(
+                                          fontSize: Get
+                                              .textTheme.titleMedium!.fontSize,
+                                          color: const Color(0xfff44235),
                                         ),
                                       ),
-                                    ],
+                                    ),
                                   ),
                                 ],
                               ),
@@ -1086,12 +973,12 @@ class _RegisterPageState extends State<RegisterPage> {
                               children: [
                                 TextButton(
                                   onPressed: () {
-                                    locationSelected(context);
+                                    locationSelected();
                                   },
                                   style: TextButton.styleFrom(
                                     fixedSize: Size(
                                       width,
-                                      height * 0.05,
+                                      height * 0.08,
                                     ),
                                     backgroundColor: const Color(0xff8B8B8B),
                                     elevation: 3, // เงาล่าง
@@ -1107,55 +994,31 @@ class _RegisterPageState extends State<RegisterPage> {
                                       SvgPicture.string(
                                         '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 14c2.206 0 4-1.794 4-4s-1.794-4-4-4-4 1.794-4 4 1.794 4 4 4zm0-6c1.103 0 2 .897 2 2s-.897 2-2 2-2-.897-2-2 .897-2 2-2z"></path><path d="M11.42 21.814a.998.998 0 0 0 1.16 0C12.884 21.599 20.029 16.44 20 10c0-4.411-3.589-8-8-8S4 5.589 4 9.995c-.029 6.445 7.116 11.604 7.42 11.819zM12 4c3.309 0 6 2.691 6 6.005.021 4.438-4.388 8.423-6 9.73-1.611-1.308-6.021-5.294-6-9.735 0-3.309 2.691-6 6-6z"></path></svg>',
                                       ),
-                                      !sameLocationAaddress
-                                          ? Container(
-                                              constraints: BoxConstraints(
-                                                  maxWidth: width *
-                                                      0.6), // จำกัดความกว้างของข้อความ
-                                              child: Text(
-                                                sameLocationAaddressText.text,
-                                                style: TextStyle(
-                                                  fontSize: Get.textTheme
-                                                      .titleMedium!.fontSize,
-                                                  color:
-                                                      !checkTextsameLocationAaddressWarningIsEmpty
-                                                          ? Colors.black
-                                                          : Color(
-                                                              int.parse(
-                                                                '0xff$textsameLocationAaddressWarningIsEmpty',
-                                                              ),
-                                                            ),
-                                                ),
-                                                maxLines:
-                                                    1, // จำกัดการแสดงผลให้อยู่ในบรรทัดเดียว
-                                                overflow: TextOverflow
-                                                    .ellipsis, // แสดง ... เมื่อข้อความยาวเกิน
-                                              ),
-                                            )
-                                          : Container(
-                                              constraints: BoxConstraints(
-                                                  maxWidth: width *
-                                                      0.6), // จำกัดความกว้างของข้อความ
-                                              child: Text(
-                                                sameLocationAaddressText.text,
-                                                style: TextStyle(
-                                                  fontSize: Get.textTheme
-                                                      .titleMedium!.fontSize,
-                                                  color:
-                                                      !checkTextsameLocationAaddressWarningIsEmpty
-                                                          ? Colors.black
-                                                          : Color(
-                                                              int.parse(
-                                                                '0xff$textsameLocationAaddressWarningIsEmpty',
-                                                              ),
-                                                            ),
-                                                ),
-                                                maxLines:
-                                                    1, // จำกัดการแสดงผลให้อยู่ในบรรทัดเดียว
-                                                overflow: TextOverflow
-                                                    .ellipsis, // แสดง ... เมื่อข้อความยาวเกิน
-                                              ),
-                                            ),
+                                      Container(
+                                        constraints: BoxConstraints(
+                                          maxWidth: width *
+                                              0.65, // จำกัดความกว้างของข้อความ
+                                        ),
+                                        child: Text(
+                                          sameLocationAaddressText.text,
+                                          style: TextStyle(
+                                            fontSize: Get.textTheme.titleMedium!
+                                                .fontSize,
+                                            color:
+                                                !checkTextsameLocationAaddressWarningIsEmpty
+                                                    ? Colors.black
+                                                    : Color(
+                                                        int.parse(
+                                                          '0xff$textsameLocationAaddressWarningIsEmpty',
+                                                        ),
+                                                      ),
+                                          ),
+                                          maxLines:
+                                              3, // จำกัดการแสดงผลให้อยู่ในบรรทัดเดียว
+                                          overflow: TextOverflow
+                                              .visible, // แสดงข้อความทั้งหมด
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -1272,6 +1135,7 @@ class _RegisterPageState extends State<RegisterPage> {
       ),
     );
   }
+  //-------------------------------------------------------------------------
 
   void register(String selectedType) async {
     var config = await Configuration.getConfig();
@@ -1721,7 +1585,8 @@ class _RegisterPageState extends State<RegisterPage> {
           nameCth.text.isNotEmpty &&
           passwordCth.text.isNotEmpty &&
           passwordCheckCtl.text.isNotEmpty &&
-          addressCtl.text.isNotEmpty) {
+          addressCtl.text.isNotEmpty &&
+          sameLocationAaddressText.text.isNotEmpty) {
         //แสดงสีป้อนข้อมูลเดิม
         setState(() {
           textPhoneWarningIsEmpty = '898989';
@@ -1739,6 +1604,12 @@ class _RegisterPageState extends State<RegisterPage> {
           checkTextAddressWarningIsEmpty = false;
           checkTextsameLocationAaddressWarningIsEmpty = false;
         });
+
+        if (sameLocationAaddressText.text == 'เลือกตำแหน่ง') {
+          textsameLocationAaddressWarningIsEmpty = 'ff0000';
+          checkTextsameLocationAaddressWarningIsEmpty = true;
+          return;
+        }
 
         //ถ้าเบอร์โทรถูกต้อง
         if (phoneCth.text.length == 10) {
@@ -1852,70 +1723,14 @@ class _RegisterPageState extends State<RegisterPage> {
             }
             //ถ้า password ตรงกัน
             if (passwordCth.text == passwordCheckCtl.text) {
-              //ถ้ามีการจิ้ม 'ตำแหน่งเดียวกันกับที่อยู่'
-              if (sameLocationAaddress) {
-                //ถ้าหากช่อง address ไม่ว่าง
-                if (addressCtl.text.isNotEmpty) {
-                  //ถ้ามีการจิ้มตำแหน่งเดียวกันกับที่อยู่
-                  setState(() {
-                    //เอาช่อง address มาใส่ในช่อง sameLocation
-                    sameLocationAaddressText.text = addressCtl.text;
-                    //เปลี่ยนสีเดิมกลับ
-                    checkTextsameLocationAaddressWarningIsEmpty = false;
-                  });
-                  Map<String, double> latLng =
-                      await getLatLngFromAddress(addressCtl.text);
-                  latlng.text = '${latLng['lat']},${latLng['lng']}';
-                  jsonRegisterMember = RegisterMemberPostRequest(
-                    name: nameCth.text,
-                    phone: phoneCth.text,
-                    password: passwordCth.text,
-                    address: addressCtl.text,
-                    gps: latlng.text,
-                    imageMember: savedFile != null ? downloadUrl : "-",
-                  );
-                } else {
-                  setState(() {
-                    //ถ้าหากช่อง address ว่าง
-                    sameLocationAaddressText.text = 'เลือกตำแหน่ง';
-                    //เปลี่ยนสีเเดง
-                    textsameLocationAaddressWarningIsEmpty = 'ff0000';
-                    checkTextsameLocationAaddressWarningIsEmpty = true;
-                  });
-                }
-              } else {
-                //ถ้าไม่มีการจิ้ม 'ตำแหน่งเดียวกันกับที่อยู่'
-                if (sameLocationAaddressText.text.isNotEmpty) {
-                  if (!checkTextsameLocationAaddressWarningIsEmpty) {
-                    if (sameLocationAaddressText.text == 'เลือกตำแหน่ง') {
-                      setState(() {
-                        textsameLocationAaddressWarningIsEmpty = 'ff0000';
-                        checkTextsameLocationAaddressWarningIsEmpty = true;
-                      });
-                    } else {
-                      //ถ้ามีการเลือกตำแหน่งผ่าน showModalBottomSheet
-                      jsonRegisterMember = RegisterMemberPostRequest(
-                        name: nameCth.text,
-                        phone: phoneCth.text,
-                        password: passwordCth.text,
-                        address: addressCtl.text,
-                        gps: latlng.text,
-                        imageMember: savedFile != null ? downloadUrl : "-",
-                      );
-                    }
-                  } else {
-                    setState(() {
-                      textsameLocationAaddressWarningIsEmpty = 'ff0000';
-                      checkTextsameLocationAaddressWarningIsEmpty = true;
-                    });
-                  }
-                } else {
-                  setState(() {
-                    textsameLocationAaddressWarningIsEmpty = '000000';
-                    checkTextsameLocationAaddressWarningIsEmpty = false;
-                  });
-                }
-              }
+              jsonRegisterMember = RegisterMemberPostRequest(
+                name: nameCth.text,
+                phone: phoneCth.text,
+                password: passwordCth.text,
+                address: addressCtl.text,
+                gps: latlng.text,
+                imageMember: savedFile != null ? downloadUrl : "-",
+              );
 
               var responsePostJsonRegisterMember = await http.post(
                 Uri.parse("$url/member/register"),
@@ -2139,10 +1954,6 @@ class _RegisterPageState extends State<RegisterPage> {
               textsameLocationAaddressWarningIsEmpty = 'ff0000';
               checkTextsameLocationAaddressWarningIsEmpty = true;
             }
-            if (sameLocationAaddress) {
-              sameLocationAaddress = false;
-              sameLocationAaddressText.text = 'เลือกตำแหน่ง';
-            }
           });
         } else {
           setState(() {
@@ -2170,40 +1981,21 @@ class _RegisterPageState extends State<RegisterPage> {
     }
   }
 
-  void sameLocationAsAaddress(bool? value) {
-    setState(() {
-      sameLocationAaddress = value ?? !sameLocationAaddress;
-
-      if (sameLocationAaddress) {
-        if (addressCtl.text.isNotEmpty) {
-          sameLocationAaddressText.text = addressCtl.text;
-          checkTextsameLocationAaddressWarningIsEmpty = false;
-        } else {
-          sameLocationAaddressText.text = 'เลือกตำแหน่ง';
-          textsameLocationAaddressWarningIsEmpty = 'ff0000';
-          checkTextsameLocationAaddressWarningIsEmpty = true;
-        }
-      } else {
-        sameLocationAaddressText.text = 'เลือกตำแหน่ง';
-      }
-    });
-  }
-
   void login() {
     Get.to(() => const LoginPage());
   }
 
-  void locationSelected(context) {
+  void locationSelected() async {
     // ใช้ width สำหรับ horizontal
-    // left/right
     double width = MediaQuery.of(context).size.width;
     // ใช้ height สำหรับ vertical
-    // top/bottom
     double height = MediaQuery.of(context).size.height;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      isDismissible: false, // ไม่สามารถปิดได้ด้วยการลาก
+      enableDrag: false, // ปิดการลาก
       builder: (BuildContext bc) {
         return Padding(
           padding: EdgeInsets.symmetric(
@@ -2212,233 +2004,133 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
           child: Container(
             height: height * 0.9,
-            // width: width,
-            child: Column(
-              children: [
-                Row(
+            child: FutureBuilder(
+              future: _determinePosition(), // ดึงตำแหน่งปัจจุบัน
+              builder: (context, snapshot) {
+                if (snapshot.connectionState != ConnectionState.done) {
+                  return Container(
+                    color: Colors.white,
+                    child: const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                }
+                Position position = snapshot.data!;
+
+                return Column(
                   children: [
-                    InkWell(
-                      onTap: () {
-                        Get.back();
-                      },
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: width * 0.01,
-                          vertical: height * 0.005,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        InkWell(
+                          onTap: () {
+                            Get.back();
+                          },
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: width * 0.01,
+                              vertical: height * 0.005,
+                            ),
+                            child: SvgPicture.string(
+                              '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12.707 17.293 8.414 13H18v-2H8.414l4.293-4.293-1.414-1.414L4.586 12l6.707 6.707z"></path></svg>',
+                              height: height * 0.03,
+                            ),
+                          ),
                         ),
-                        child: SvgPicture.string(
-                          '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12.707 17.293 8.414 13H18v-2H8.414l4.293-4.293-1.414-1.414L4.586 12l6.707 6.707z"></path></svg>',
-                          height: height * 0.03,
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'ที่อยู่',
+                          style: TextStyle(
+                            fontSize: Get.textTheme.titleLarge!.fontSize,
+                          ),
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-                ElevatedButton(
-                  onPressed: () => presstousecurrentlocation(context),
-                  style: ElevatedButton.styleFrom(
-                    fixedSize: Size(
-                      width * 0.8,
-                      height * 0.05,
-                    ),
-                    backgroundColor: const Color(0xffFEF7E7),
-                    elevation: 2, //เงาล่าง
-                    shadowColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12), // มุมโค้งมน
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SvgPicture.string(
-                        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 2C7.589 2 4 5.589 4 9.995 3.971 16.44 11.696 21.784 12 22c0 0 8.029-5.56 8-12 0-4.411-3.589-8-8-8zm0 12c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"></path></svg>',
-                        color: Colors.red,
-                      ),
-                      Text(
-                        'ใช้ตำแหน่งปัจจุบัน',
-                        style: TextStyle(
-                          fontSize: Get.textTheme.titleMedium!.fontSize,
-                          color: Colors.black,
-                        ),
-                      )
-                    ],
-                  ),
-                ),
-                SizedBox(height: height * 0.02),
-                Row(
-                  children: [
-                    Text(
-                      'จังหวัด',
-                      style: TextStyle(
-                        fontSize: Get.textTheme.titleLarge!.fontSize,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: height * 0.02),
-                Expanded(
-                  child: ListView.builder(
-                    padding: EdgeInsets.zero,
-                    itemCount: provinces.length,
-                    itemBuilder: (context, index) {
-                      return Column(
-                        children: [
-                          ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            title: InkWell(
-                              onTap: () {
-                                selectedProvince = provinces[index];
-                              },
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: width * 0.02,
-                                  vertical: height * 0.01,
-                                ),
-                                child: Text(provinces[index]),
+                        InkWell(
+                          onTap: () {
+                            sameLocationAaddressText.text = 'เลือกตำแหน่ง';
+                            sameLocationAaddresstextShow.clear();
+                            setState(() {});
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              'ล้าง',
+                              style: TextStyle(
+                                fontSize: Get.textTheme.titleMedium!.fontSize,
+                                color: const Color(0xfff44235),
                               ),
                             ),
                           ),
-                          const Divider(
-                            // เส้นแบ่งระหว่างจังหวัด
-                            color: Colors.grey, // สีของเส้นแบ่ง
-                            thickness: 1, // ความหนาของเส้นแบ่ง
-                            height: 0,
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: height * 0.01),
+                    Container(
+                      height: height * 0.12,
+                      decoration: BoxDecoration(
+                        color: const Color(0xffE2E2E2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: TextField(
+                        controller: sameLocationAaddresstextShow,
+                        enabled: true,
+                        keyboardType: TextInputType.text,
+                        cursorColor: Colors.black,
+                        maxLines: null, // รองรับหลายบรรทัด
+                        decoration: InputDecoration(
+                          hintText:
+                              'บ้านเลขที่, ซอย, หมู่, ถนน, แขวง/ตำบล, เขต/อำเภอ, จังหวัด, รหัสไปรษณีย์',
+                          hintStyle: TextStyle(
+                            fontSize: Get.textTheme.titleSmall!.fontSize,
+                            color: const Color.fromARGB(255, 115, 115, 115),
                           ),
-                        ],
-                      );
-                    },
-                  ),
-                )
-              ],
+                          constraints: BoxConstraints(
+                            maxHeight: height * 0.05,
+                          ),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: width * 0.04,
+                            vertical: height * 0.015,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: height * 0.01),
+                    Expanded(
+                      child: PlacePicker(
+                        apiKey:
+                            "AIzaSyCCO43655qj2NvMx-o765XuddYontDAvRk", // ใช้ API Key ของคุณ
+                        onPlacePicked: (result) {
+                          sameLocationAaddresstextShow.text =
+                              result.formattedAddress.toString();
+                          sameLocationAaddressText.text =
+                              result.formattedAddress.toString();
+                          latlng.text = result.geometry!.location.toString();
+                          textsameLocationAaddressWarningIsEmpty = '000000';
+                          checkTextsameLocationAaddressWarningIsEmpty = false;
+                          setState(() {});
+                        },
+                        initialPosition: LatLng(position.latitude,
+                            position.longitude), // ใช้ตำแหน่งปัจจุบัน
+                        useCurrentLocation: true,
+                        automaticallyImplyAppBarLeading: false, // ปิดลูกศรกลับ
+                        searchForInitialValue: false, // ปิดการค้นหา
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         );
       },
     );
-  }
-
-  void presstousecurrentlocation(context) async {
-    // เรียกใช้ฟังก์ชันเพื่อรับข้อมูลจังหวัด, อำเภอ, ตำบล, ข้อมูลรหัสไปรษณีย์
-    try {
-      Get.defaultDialog(
-        title: "",
-        titlePadding: EdgeInsets.zero,
-        contentPadding: EdgeInsets.symmetric(
-          horizontal: MediaQuery.of(context).size.width * 0.02,
-          vertical: MediaQuery.of(context).size.height * 0.02,
-        ),
-        content: Column(
-          children: [
-            const CircularProgressIndicator(),
-            SizedBox(height: MediaQuery.of(context).size.width * 0.03),
-            Text(
-              'กำลังค้นหาตำแหน่ง..',
-              style: TextStyle(
-                fontSize: Get.textTheme.titleLarge!.fontSize,
-                color: const Color(0xffaf4c31),
-              ),
-            ),
-            Text(
-              'เรากำลังค้นหาตำแหน่ง กรุณารอสักครู่...',
-              style: TextStyle(
-                fontSize: Get.textTheme.titleSmall!.fontSize,
-              ),
-            ),
-          ],
-        ),
-        barrierDismissible: false,
-      );
-      Position position = await _determinePosition();
-      Map<String, String> locationDetails =
-          await getLocationDetailsFromCoordinates(
-              position.latitude, position.longitude);
-      latlng.text = '${position.latitude},${position.longitude}';
-      sameLocationAaddressText.text =
-          '${locationDetails['province']} ${locationDetails['district']} ${locationDetails['subDistrict']} ${locationDetails['postalCode']}';
-      sameLocationAaddress = false;
-      textsameLocationAaddressWarningIsEmpty = '000000';
-      checkTextsameLocationAaddressWarningIsEmpty = false;
-      setState(() {});
-    } catch (e) {
-      Get.back();
-    } finally {
-      Get.back();
-    }
-  }
-
-  Future<Map<String, String>> getLocationDetailsFromCoordinates(
-      double latitude, double longitude) async {
-    final response = await http.get(Uri.parse(
-        'https://maps.googleapis.com/maps/api/geocode/json?latlng=$latitude,$longitude&language=th&key=AIzaSyCCO43655qj2NvMx-o765XuddYontDAvRk'));
-
-    if (response.statusCode == 200) {
-      final jsonData = json.decode(response.body);
-      if (jsonData['results'].isNotEmpty) {
-        String province = '';
-        String district = '';
-        String subDistrict = '';
-        String postalCode = '';
-
-        for (var component in jsonData['results'][0]['address_components']) {
-          if (component['types'].contains('administrative_area_level_1')) {
-            province = component['long_name']; // จังหวัด
-          }
-          if (component['types'].contains('administrative_area_level_2')) {
-            district = component['long_name']; // อำเภอ
-          }
-          if (component['types'].contains('sublocality_level_1') ||
-              component['types'].contains('locality')) {
-            subDistrict = component['long_name']; // ตำบล
-          }
-          if (component['types'].contains('postal_code')) {
-            postalCode = component['long_name']; // ตำบล
-          }
-        }
-
-        return {
-          'province': province.isNotEmpty ? province : 'ไม่พบข้อมูลจังหวัด',
-          'district': district.isNotEmpty ? district : 'ไม่พบข้อมูลอำเภอ',
-          'subDistrict':
-              subDistrict.isNotEmpty ? subDistrict : 'ไม่พบข้อมูลตำบล',
-          'postalCode':
-              postalCode.isNotEmpty ? postalCode : 'ไม่พบข้อมูลรหัสไปรษณีย์',
-        };
-      } else {
-        return {
-          'province': 'ไม่พบข้อมูลจังหวัด',
-          'district': 'ไม่พบข้อมูลอำเภอ',
-          'subDistrict': 'ไม่พบข้อมูลตำบล',
-          'postalCode': 'ไม่พบข้อมูลรหัสไปรษณีย์',
-        };
-      }
-    } else {
-      throw Exception('Failed to load location details');
-    }
-  }
-
-  Future<Map<String, double>> getLatLngFromAddress(String address) async {
-    final response = await http.get(Uri.parse(
-        'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(address)}&components=country:TH&key=AIzaSyCCO43655qj2NvMx-o765XuddYontDAvRk'));
-
-    if (response.statusCode == 200) {
-      final jsonData = json.decode(response.body);
-
-      if (jsonData['results'].isNotEmpty) {
-        final location = jsonData['results'][0]['geometry']['location'];
-        final double lat = location['lat'];
-        final double lng = location['lng'];
-
-        return {
-          'lat': lat,
-          'lng': lng,
-        }; // คืนค่า lat และ lng เป็น Map<String, double>
-      } else {
-        throw Exception('ไม่พบข้อมูลพิกัดสำหรับที่อยู่นี้');
-      }
-    } else {
-      throw Exception('Failed to get location');
-    }
   }
 
   Future<Position> _determinePosition() async {

@@ -2004,133 +2004,233 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
           child: Container(
             height: height * 0.9,
-            child: FutureBuilder(
-              future: _determinePosition(), // ดึงตำแหน่งปัจจุบัน
-              builder: (context, snapshot) {
-                if (snapshot.connectionState != ConnectionState.done) {
-                  return Container(
-                    color: Colors.white,
-                    child: const Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                  );
-                }
-                Position position = snapshot.data!;
-
-                return Column(
+            // width: width,
+            child: Column(
+              children: [
+                Row(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        InkWell(
-                          onTap: () {
-                            Get.back();
-                          },
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: width * 0.01,
-                              vertical: height * 0.005,
-                            ),
-                            child: SvgPicture.string(
-                              '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12.707 17.293 8.414 13H18v-2H8.414l4.293-4.293-1.414-1.414L4.586 12l6.707 6.707z"></path></svg>',
-                              height: height * 0.03,
-                            ),
-                          ),
+                    InkWell(
+                      onTap: () {
+                        Get.back();
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: width * 0.01,
+                          vertical: height * 0.005,
                         ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'ที่อยู่',
-                          style: TextStyle(
-                            fontSize: Get.textTheme.titleLarge!.fontSize,
-                          ),
+                        child: SvgPicture.string(
+                          '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12.707 17.293 8.414 13H18v-2H8.414l4.293-4.293-1.414-1.414L4.586 12l6.707 6.707z"></path></svg>',
+                          height: height * 0.03,
                         ),
-                        InkWell(
-                          onTap: () {
-                            sameLocationAaddressText.text = 'เลือกตำแหน่ง';
-                            sameLocationAaddresstextShow.clear();
-                            setState(() {});
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              'ล้าง',
-                              style: TextStyle(
-                                fontSize: Get.textTheme.titleMedium!.fontSize,
-                                color: const Color(0xfff44235),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: height * 0.01),
-                    Container(
-                      height: height * 0.12,
-                      decoration: BoxDecoration(
-                        color: const Color(0xffE2E2E2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: TextField(
-                        controller: sameLocationAaddresstextShow,
-                        enabled: true,
-                        keyboardType: TextInputType.text,
-                        cursorColor: Colors.black,
-                        maxLines: null, // รองรับหลายบรรทัด
-                        decoration: InputDecoration(
-                          hintText:
-                              'บ้านเลขที่, ซอย, หมู่, ถนน, แขวง/ตำบล, เขต/อำเภอ, จังหวัด, รหัสไปรษณีย์',
-                          hintStyle: TextStyle(
-                            fontSize: Get.textTheme.titleSmall!.fontSize,
-                            color: const Color.fromARGB(255, 115, 115, 115),
-                          ),
-                          constraints: BoxConstraints(
-                            maxHeight: height * 0.05,
-                          ),
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: width * 0.04,
-                            vertical: height * 0.015,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: height * 0.01),
-                    Expanded(
-                      child: PlacePicker(
-                        apiKey:
-                            "AIzaSyCCO43655qj2NvMx-o765XuddYontDAvRk", // ใช้ API Key ของคุณ
-                        onPlacePicked: (result) {
-                          sameLocationAaddresstextShow.text =
-                              result.formattedAddress.toString();
-                          sameLocationAaddressText.text =
-                              result.formattedAddress.toString();
-                          latlng.text = result.geometry!.location.toString();
-                          textsameLocationAaddressWarningIsEmpty = '000000';
-                          checkTextsameLocationAaddressWarningIsEmpty = false;
-                          setState(() {});
-                        },
-                        initialPosition: LatLng(position.latitude,
-                            position.longitude), // ใช้ตำแหน่งปัจจุบัน
-                        useCurrentLocation: true,
-                        automaticallyImplyAppBarLeading: false, // ปิดลูกศรกลับ
-                        searchForInitialValue: false, // ปิดการค้นหา
                       ),
                     ),
                   ],
-                );
-              },
+                ),
+                ElevatedButton(
+                  onPressed: () => presstousecurrentlocation(context),
+                  style: ElevatedButton.styleFrom(
+                    fixedSize: Size(
+                      width * 0.8,
+                      height * 0.05,
+                    ),
+                    backgroundColor: const Color(0xffFEF7E7),
+                    elevation: 2, //เงาล่าง
+                    shadowColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12), // มุมโค้งมน
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SvgPicture.string(
+                        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 2C7.589 2 4 5.589 4 9.995 3.971 16.44 11.696 21.784 12 22c0 0 8.029-5.56 8-12 0-4.411-3.589-8-8-8zm0 12c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"></path></svg>',
+                        color: Colors.red,
+                      ),
+                      Text(
+                        'ใช้ตำแหน่งปัจจุบัน',
+                        style: TextStyle(
+                          fontSize: Get.textTheme.titleMedium!.fontSize,
+                          color: Colors.black,
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+                SizedBox(height: height * 0.02),
+                Row(
+                  children: [
+                    Text(
+                      'จังหวัด',
+                      style: TextStyle(
+                        fontSize: Get.textTheme.titleLarge!.fontSize,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: height * 0.02),
+                Expanded(
+                  child: ListView.builder(
+                    padding: EdgeInsets.zero,
+                    itemCount: provinces.length,
+                    itemBuilder: (context, index) {
+                      return Column(
+                        children: [
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: InkWell(
+                              onTap: () {
+                                selectedProvince = provinces[index];
+                              },
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: width * 0.02,
+                                  vertical: height * 0.01,
+                                ),
+                                child: Text(provinces[index]),
+                              ),
+                            ),
+                          ),
+                          const Divider(
+                            // เส้นแบ่งระหว่างจังหวัด
+                            color: Colors.grey, // สีของเส้นแบ่ง
+                            thickness: 1, // ความหนาของเส้นแบ่ง
+                            height: 0,
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                )
+              ],
             ),
           ),
         );
       },
     );
+  }
+
+  void presstousecurrentlocation(context) async {
+    // เรียกใช้ฟังก์ชันเพื่อรับข้อมูลจังหวัด, อำเภอ, ตำบล, ข้อมูลรหัสไปรษณีย์
+    try {
+      Get.defaultDialog(
+        title: "",
+        titlePadding: EdgeInsets.zero,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: MediaQuery.of(context).size.width * 0.02,
+          vertical: MediaQuery.of(context).size.height * 0.02,
+        ),
+        content: Column(
+          children: [
+            const CircularProgressIndicator(),
+            SizedBox(height: MediaQuery.of(context).size.width * 0.03),
+            Text(
+              'กำลังค้นหาตำแหน่ง..',
+              style: TextStyle(
+                fontSize: Get.textTheme.titleLarge!.fontSize,
+                color: const Color(0xffaf4c31),
+              ),
+            ),
+            Text(
+              'เรากำลังค้นหาตำแหน่ง กรุณารอสักครู่...',
+              style: TextStyle(
+                fontSize: Get.textTheme.titleSmall!.fontSize,
+              ),
+            ),
+          ],
+        ),
+        barrierDismissible: false,
+      );
+      Position position = await _determinePosition();
+      Map<String, String> locationDetails =
+          await getLocationDetailsFromCoordinates(
+              position.latitude, position.longitude);
+      latlng.text = '${position.latitude},${position.longitude}';
+      sameLocationAaddressText.text =
+          '${locationDetails['province']} ${locationDetails['district']} ${locationDetails['subDistrict']} ${locationDetails['postalCode']}';
+      sameLocationAaddress = false;
+      textsameLocationAaddressWarningIsEmpty = '000000';
+      checkTextsameLocationAaddressWarningIsEmpty = false;
+      setState(() {});
+    } catch (e) {
+      Get.back();
+    } finally {
+      Get.back();
+    }
+  }
+
+  Future<Map<String, String>> getLocationDetailsFromCoordinates(
+      double latitude, double longitude) async {
+    final response = await http.get(Uri.parse(
+        'https://maps.googleapis.com/maps/api/geocode/json?latlng=$latitude,$longitude&language=th&key=AIzaSyCCO43655qj2NvMx-o765XuddYontDAvRk'));
+
+    if (response.statusCode == 200) {
+      final jsonData = json.decode(response.body);
+      if (jsonData['results'].isNotEmpty) {
+        String province = '';
+        String district = '';
+        String subDistrict = '';
+        String postalCode = '';
+
+        for (var component in jsonData['results'][0]['address_components']) {
+          if (component['types'].contains('administrative_area_level_1')) {
+            province = component['long_name']; // จังหวัด
+          }
+          if (component['types'].contains('administrative_area_level_2')) {
+            district = component['long_name']; // อำเภอ
+          }
+          if (component['types'].contains('sublocality_level_1') ||
+              component['types'].contains('locality')) {
+            subDistrict = component['long_name']; // ตำบล
+          }
+          if (component['types'].contains('postal_code')) {
+            postalCode = component['long_name']; // ตำบล
+          }
+        }
+
+        return {
+          'province': province.isNotEmpty ? province : 'ไม่พบข้อมูลจังหวัด',
+          'district': district.isNotEmpty ? district : 'ไม่พบข้อมูลอำเภอ',
+          'subDistrict':
+              subDistrict.isNotEmpty ? subDistrict : 'ไม่พบข้อมูลตำบล',
+          'postalCode':
+              postalCode.isNotEmpty ? postalCode : 'ไม่พบข้อมูลรหัสไปรษณีย์',
+        };
+      } else {
+        return {
+          'province': 'ไม่พบข้อมูลจังหวัด',
+          'district': 'ไม่พบข้อมูลอำเภอ',
+          'subDistrict': 'ไม่พบข้อมูลตำบล',
+          'postalCode': 'ไม่พบข้อมูลรหัสไปรษณีย์',
+        };
+      }
+    } else {
+      throw Exception('Failed to load location details');
+    }
+  }
+
+  Future<Map<String, double>> getLatLngFromAddress(String address) async {
+    final response = await http.get(Uri.parse(
+        'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(address)}&components=country:TH&key=AIzaSyCCO43655qj2NvMx-o765XuddYontDAvRk'));
+
+    if (response.statusCode == 200) {
+      final jsonData = json.decode(response.body);
+
+      if (jsonData['results'].isNotEmpty) {
+        final location = jsonData['results'][0]['geometry']['location'];
+        final double lat = location['lat'];
+        final double lng = location['lng'];
+
+        return {
+          'lat': lat,
+          'lng': lng,
+        }; // คืนค่า lat และ lng เป็น Map<String, double>
+      } else {
+        throw Exception('ไม่พบข้อมูลพิกัดสำหรับที่อยู่นี้');
+      }
+    } else {
+      throw Exception('Failed to get location');
+    }
   }
 
   Future<Position> _determinePosition() async {

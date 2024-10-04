@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -11,6 +13,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:map_location_picker/map_location_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:raidely/config/config.dart';
+import 'package:raidely/models/request/updateMemberPutRequest.dart';
 import 'package:raidely/models/response/byPhoneMemberGetResponse.dart';
 import 'package:raidely/pages/login.dart';
 import 'package:raidely/shared/appData.dart';
@@ -33,7 +36,6 @@ class _ProfilePageState extends State<ProfilePage> {
   TextEditingController sameLocationAaddressText = TextEditingController();
   TextEditingController sameLocationAaddresstextShow = TextEditingController();
   bool isTyping = false;
-  bool _isCheckedPassword = true;
   bool sameLocationAaddress = false;
   bool editInformation = false;
   late List<ByPhoneMemberGetResponse> resultsResponseMemberBody = [];
@@ -55,6 +57,12 @@ class _ProfilePageState extends State<ProfilePage> {
     var responseMember = await http.get(Uri.parse('$url/member/$phone'));
     resultsResponseMemberBody =
         byPhoneMemberGetResponseFromJson(responseMember.body);
+    setState(() {
+      phoneCth.text = resultsResponseMemberBody[0].phone;
+      nameCth.text = resultsResponseMemberBody[0].name;
+      passwordCth.text = resultsResponseMemberBody[0].password;
+      addressCtl.text = resultsResponseMemberBody[0].address;
+    });
   }
 
   @override
@@ -195,7 +203,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               },
                               child: Container(
                                 height: height * 0.1,
-                                width: width * 0.25,
+                                width: width * 0.22,
                                 decoration: const BoxDecoration(
                                   shape: BoxShape.circle,
                                 ),
@@ -229,17 +237,61 @@ class _ProfilePageState extends State<ProfilePage> {
                                             left: 0,
                                             right: 0,
                                             bottom: 0,
-                                            child: SvgPicture.string(
-                                              '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 2a5 5 0 1 0 5 5 5 5 0 0 0-5-5zm0 8a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm9 11v-1a7 7 0 0 0-7-7h-4a7 7 0 0 0-7 7v1h2v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1z"></path></svg>',
-                                              height: height * 0.07,
-                                              color: Colors.grey,
+                                            child: ClipOval(
+                                              child: resultsResponseMemberBody[
+                                                              0]
+                                                          .imageMember ==
+                                                      '-'
+                                                  ? Container(
+                                                      height: height * 0.1,
+                                                      width: width * 0.25,
+                                                      decoration:
+                                                          const BoxDecoration(
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                      child: Stack(
+                                                        children: [
+                                                          Container(
+                                                            height:
+                                                                height * 0.1,
+                                                            decoration:
+                                                                const BoxDecoration(
+                                                              color: Color(
+                                                                  0xffd9d9d9),
+                                                              shape: BoxShape
+                                                                  .circle,
+                                                            ),
+                                                          ),
+                                                          Positioned(
+                                                            left: 0,
+                                                            right: 0,
+                                                            bottom: 0,
+                                                            child: SvgPicture
+                                                                .string(
+                                                              '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 2a5 5 0 1 0 5 5 5 5 0 0 0-5-5zm0 8a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm9 11v-1a7 7 0 0 0-7-7h-4a7 7 0 0 0-7 7v1h2v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1z"></path></svg>',
+                                                              height:
+                                                                  height * 0.07,
+                                                              color:
+                                                                  Colors.grey,
+                                                            ),
+                                                          )
+                                                        ],
+                                                      ),
+                                                    )
+                                                  : Image.network(
+                                                      resultsResponseMemberBody[
+                                                              0]
+                                                          .imageMember,
+                                                      height: height * 0.1,
+                                                      width: width * 0.2,
+                                                      fit: BoxFit.cover,
+                                                    ),
                                             ),
                                           )
                                         : Positioned(
-                                            left: width * 0.02,
-                                            right: width * 0.02,
+                                            left: 0,
+                                            right: 0,
                                             bottom: 0,
-                                            top: 0,
                                             child: ClipOval(
                                               child: Image.file(
                                                 savedFile!,
@@ -284,12 +336,42 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                             )
                           : ClipOval(
-                              child: Image.network(
-                                resultsResponseMemberBody[0].imageMember,
-                                height: height * 0.1,
-                                width: width * 0.22,
-                                fit: BoxFit.cover,
-                              ),
+                              child: resultsResponseMemberBody[0].imageMember ==
+                                      '-'
+                                  ? Container(
+                                      height: height * 0.1,
+                                      width: width * 0.25,
+                                      decoration: const BoxDecoration(
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Stack(
+                                        children: [
+                                          Container(
+                                            height: height * 0.1,
+                                            decoration: const BoxDecoration(
+                                              color: Color(0xffd9d9d9),
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                          Positioned(
+                                            left: 0,
+                                            right: 0,
+                                            bottom: 0,
+                                            child: SvgPicture.string(
+                                              '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 2a5 5 0 1 0 5 5 5 5 0 0 0-5-5zm0 8a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm9 11v-1a7 7 0 0 0-7-7h-4a7 7 0 0 0-7 7v1h2v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1z"></path></svg>',
+                                              height: height * 0.07,
+                                              color: Colors.grey,
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                                    )
+                                  : Image.network(
+                                      resultsResponseMemberBody[0].imageMember,
+                                      height: height * 0.1,
+                                      width: width * 0.22,
+                                      fit: BoxFit.cover,
+                                    ),
                             ),
                       SizedBox(height: height * 0.02),
                       Text(
@@ -328,73 +410,38 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ],
                       ),
-                      if (!editInformation)
-                        Container(
-                          decoration: BoxDecoration(
-                            color: const Color(0xffE2E2E2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: TextField(
-                            keyboardType: TextInputType.phone,
-                            cursorColor: Colors.black,
-                            enabled: false,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              LengthLimitingTextInputFormatter(10),
-                            ],
-                            decoration: InputDecoration(
-                              hintText: resultsResponseMemberBody[0].phone,
-                              hintStyle: TextStyle(
-                                fontSize: Get.textTheme.titleSmall!.fontSize,
-                                color: const Color(0xff898989),
-                              ),
-                              constraints: BoxConstraints(
-                                maxHeight: height * 0.05,
-                              ),
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: width * 0.04,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xffE2E2E2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: TextField(
+                          keyboardType: TextInputType.phone,
+                          cursorColor: Colors.black,
+                          enabled: false,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(10),
+                          ],
+                          decoration: InputDecoration(
+                            hintText: resultsResponseMemberBody[0].phone,
+                            hintStyle: TextStyle(
+                              fontSize: Get.textTheme.titleSmall!.fontSize,
+                              color: const Color(0xff898989),
+                            ),
+                            constraints: BoxConstraints(
+                              maxHeight: height * 0.05,
+                            ),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: width * 0.04,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
                             ),
                           ),
                         ),
-                      if (editInformation)
-                        Container(
-                          decoration: BoxDecoration(
-                            color: const Color(0xffE2E2E2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: TextField(
-                            controller: phoneCth,
-                            keyboardType: TextInputType.phone,
-                            cursorColor: Colors.black,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              LengthLimitingTextInputFormatter(10),
-                            ],
-                            decoration: InputDecoration(
-                              hintText:
-                                  isTyping ? '' : 'ป้อนหมายเลขโทรศัพท์ของคุณ',
-                              hintStyle: TextStyle(
-                                fontSize: Get.textTheme.titleSmall!.fontSize,
-                                color: const Color(0xff898989),
-                              ),
-                              constraints: BoxConstraints(
-                                maxHeight: height * 0.05,
-                              ),
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: width * 0.04,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                            ),
-                          ),
-                        ),
+                      ),
                       Row(
                         children: [
                           Padding(
@@ -458,6 +505,13 @@ class _ProfilePageState extends State<ProfilePage> {
                             keyboardType: TextInputType.name,
                             cursorColor: Colors.black,
                             decoration: InputDecoration(
+                              suffixIcon: IconButton(
+                                iconSize: height * 0.03,
+                                icon: SvgPicture.string(
+                                  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M19.045 7.401c.378-.378.586-.88.586-1.414s-.208-1.036-.586-1.414l-1.586-1.586c-.378-.378-.88-.586-1.414-.586s-1.036.208-1.413.585L4 13.585V18h4.413L19.045 7.401zm-3-3 1.587 1.585-1.59 1.584-1.586-1.585 1.589-1.584zM6 16v-1.585l7.04-7.018 1.586 1.586L7.587 16H6zm-2 4h16v2H4z"></path></svg>',
+                                ),
+                                onPressed: null,
+                              ),
                               hintText: isTyping ? '' : 'ป้อนชื่อของคุณ',
                               hintStyle: TextStyle(
                                 fontSize: Get.textTheme.titleSmall!.fontSize,
@@ -505,15 +559,12 @@ class _ProfilePageState extends State<ProfilePage> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: TextField(
-                            controller: passwordCth,
-                            obscureText: _isCheckedPassword,
-                            keyboardType: TextInputType.visiblePassword,
-                            cursorColor: Colors.black,
+                            obscureText: true,
                             enabled: false,
                             decoration: InputDecoration(
                               hintText: resultsResponseMemberBody[0]
                                   .password
-                                  .replaceAll(RegExp(r"."), "*"),
+                                  .replaceAll(RegExp('.'), '*'),
                               hintStyle: TextStyle(
                                 fontSize: Get.textTheme.titleSmall!.fontSize,
                                 color: const Color(0xff898989),
@@ -538,23 +589,17 @@ class _ProfilePageState extends State<ProfilePage> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: TextField(
+                            obscureText: false,
                             controller: passwordCth,
-                            obscureText: _isCheckedPassword,
                             keyboardType: TextInputType.visiblePassword,
                             cursorColor: Colors.black,
                             decoration: InputDecoration(
                               suffixIcon: IconButton(
                                 iconSize: height * 0.03,
-                                icon: Icon(
-                                  _isCheckedPassword
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
+                                icon: SvgPicture.string(
+                                  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M19.045 7.401c.378-.378.586-.88.586-1.414s-.208-1.036-.586-1.414l-1.586-1.586c-.378-.378-.88-.586-1.414-.586s-1.036.208-1.413.585L4 13.585V18h4.413L19.045 7.401zm-3-3 1.587 1.585-1.59 1.584-1.586-1.585 1.589-1.584zM6 16v-1.585l7.04-7.018 1.586 1.586L7.587 16H6zm-2 4h16v2H4z"></path></svg>',
                                 ),
-                                onPressed: () {
-                                  setState(() {
-                                    _isCheckedPassword = !_isCheckedPassword;
-                                  });
-                                },
+                                onPressed: null,
                               ),
                               hintText: isTyping ? '' : 'ป้อนรหัสผ่านของคุณ',
                               hintStyle: TextStyle(
@@ -644,6 +689,13 @@ class _ProfilePageState extends State<ProfilePage> {
                             cursorColor: Colors.black,
                             maxLines: null, // เพื่อให้รองรับข้อความหลายบรรทัด
                             decoration: InputDecoration(
+                              suffixIcon: IconButton(
+                                iconSize: height * 0.03,
+                                icon: SvgPicture.string(
+                                  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M19.045 7.401c.378-.378.586-.88.586-1.414s-.208-1.036-.586-1.414l-1.586-1.586c-.378-.378-.88-.586-1.414-.586s-1.036.208-1.413.585L4 13.585V18h4.413L19.045 7.401zm-3-3 1.587 1.585-1.59 1.584-1.586-1.585 1.589-1.584zM6 16v-1.585l7.04-7.018 1.586 1.586L7.587 16H6zm-2 4h16v2H4z"></path></svg>',
+                                ),
+                                onPressed: null,
+                              ),
                               hintText: isTyping
                                   ? ''
                                   : 'บ้านเลขที่, ซอย, หมู่, ถนน, แขวง/ตำบล,\n เขต/อำเภอ, จังหวัด, รหัสไปรษณีย์',
@@ -757,11 +809,16 @@ class _ProfilePageState extends State<ProfilePage> {
                                       width * 0.65, // จำกัดความกว้างของข้อความ
                                 ),
                                 child: Text(
-                                  resultsResponseMemberBody[0].address,
+                                  context
+                                      .read<Appdata>()
+                                      .pickupLocations
+                                      .pickupLocation,
                                   style: TextStyle(
-                                      fontSize:
-                                          Get.textTheme.titleMedium!.fontSize,
-                                      color: Colors.black),
+                                    fontSize:
+                                        Get.textTheme.titleMedium!.fontSize,
+                                    color:
+                                        const Color.fromARGB(248, 61, 61, 61),
+                                  ),
                                   maxLines:
                                       3, // จำกัดการแสดงผลให้อยู่ในบรรทัดเดียว
                                   overflow: TextOverflow
@@ -803,9 +860,10 @@ class _ProfilePageState extends State<ProfilePage> {
                                 child: Text(
                                   sameLocationAaddressText.text,
                                   style: TextStyle(
-                                      fontSize:
-                                          Get.textTheme.titleMedium!.fontSize,
-                                      color: Colors.black),
+                                    fontSize:
+                                        Get.textTheme.titleMedium!.fontSize,
+                                    color: Colors.black,
+                                  ),
                                   maxLines:
                                       3, // จำกัดการแสดงผลให้อยู่ในบรรทัดเดียว
                                   overflow: TextOverflow
@@ -846,11 +904,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       if (editInformation)
                         ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              editInformation = false;
-                            });
-                          },
+                          onPressed: editProfile,
                           style: ElevatedButton.styleFrom(
                             fixedSize: Size(
                               width * 0.4,
@@ -894,11 +948,155 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  void editProfile() async {
+    setState(() {
+      editInformation = false;
+    });
+
+    var config = await Configuration.getConfig();
+    var url = config['apiEndpoint'];
+    //ถ้าหากมีการเปลี่ยนรูป
+    String downloadUrl = "";
+    if (savedFile != null) {
+      // แสดง Loading Indicator
+      Get.defaultDialog(
+        title: "",
+        titlePadding: EdgeInsets.zero,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: MediaQuery.of(context).size.width * 0.02,
+          vertical: MediaQuery.of(context).size.height * 0.02,
+        ),
+        content: Column(
+          children: [
+            const CircularProgressIndicator(),
+            SizedBox(height: MediaQuery.of(context).size.width * 0.03),
+            Text(
+              'กำลังบันทึกข้อมูล..',
+              style: TextStyle(
+                fontSize: Get.textTheme.titleLarge!.fontSize,
+                color: const Color(0xffaf4c31),
+              ),
+            ),
+            Text(
+              'เรากำลังบันทึกข้อมูล กรุณารอสักครู่...',
+              style: TextStyle(
+                fontSize: Get.textTheme.titleSmall!.fontSize,
+              ),
+            ),
+          ],
+        ),
+        barrierDismissible: false,
+      );
+      try {
+        // สร้างอ้างอิงไปยัง Firebase Storage
+        Reference storageReference = FirebaseStorage.instance.ref().child(
+            'uploads/${DateTime.now().millisecondsSinceEpoch}_${savedFile!.path.split('/').last}');
+
+        // อัพโหลดไฟล์และรอจนกว่าจะเสร็จสิ้น
+        UploadTask uploadTask = storageReference.putFile(savedFile!);
+        TaskSnapshot taskSnapshot = await uploadTask;
+
+        // รับ URL ของรูปที่อัพโหลดสำเร็จ
+        downloadUrl = await taskSnapshot.ref.getDownloadURL();
+        // ลบรูปเดิมหากมี
+        if (resultsResponseMemberBody[0].imageMember.isNotEmpty) {
+          Reference oldImageRef = FirebaseStorage.instance
+              .refFromURL(resultsResponseMemberBody[0].imageMember);
+          await oldImageRef.delete();
+        }
+      } catch (e) {
+      } finally {
+        // ปิด Loading Indicator
+        Get.back();
+      }
+    }
+    UpdateMemberPutRequest jsonUpdateMember = UpdateMemberPutRequest(
+      name: nameCth.text.isNotEmpty
+          ? nameCth.text
+          : resultsResponseMemberBody[0].name,
+      password: passwordCth.text.isNotEmpty
+          ? passwordCth.text
+          : resultsResponseMemberBody[0].password,
+      address: addressCtl.text.isNotEmpty
+          ? addressCtl.text
+          : resultsResponseMemberBody[0].address,
+      gps: latlng.text.isNotEmpty
+          ? latlng.text
+          : resultsResponseMemberBody[0].gps,
+      imageMember: savedFile != null
+          ? downloadUrl
+          : resultsResponseMemberBody[0].imageMember,
+    );
+
+    var responsePutJsonUpdateMember = await http.put(
+      Uri.parse(
+          "$url/member/updatemember/${resultsResponseMemberBody[0].phone}"),
+      headers: {"Content-Type": "application/json; charset=utf-8"},
+      body: updateMemberPutRequestToJson(jsonUpdateMember),
+    );
+
+    if (responsePutJsonUpdateMember.statusCode == 200) {
+      setState(() {
+        savedFile = null;
+        loadDataAsync();
+      });
+      Get.defaultDialog(
+        title: "",
+        titlePadding: EdgeInsets.zero,
+        content: Column(
+          children: [
+            Image.asset(
+              'assets/images/success.png',
+              width: MediaQuery.of(context).size.width * 0.16,
+              height: MediaQuery.of(context).size.width * 0.16,
+              fit: BoxFit.cover,
+            ),
+            SizedBox(height: MediaQuery.of(context).size.width * 0.03),
+            Text(
+              'แก้ไขข้อมูลสำเร็จ!',
+              style: TextStyle(
+                fontSize: Get.textTheme.titleLarge!.fontSize,
+              ),
+            ),
+          ],
+        ),
+        barrierDismissible: false,
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Get.back();
+            },
+            style: ElevatedButton.styleFrom(
+              fixedSize: Size(
+                MediaQuery.of(context).size.width * 0.3,
+                MediaQuery.of(context).size.height * 0.05,
+              ),
+              backgroundColor: const Color(0xffFEF7E7),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
+            ),
+            child: Text(
+              'ยืนยัน',
+              style: TextStyle(
+                fontSize: Get.textTheme.titleSmall!.fontSize,
+                color: Colors.black,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+  }
+
   void locationSelected() async {
     // ใช้ width สำหรับ horizontal
     double width = MediaQuery.of(context).size.width;
     // ใช้ height สำหรับ vertical
     double height = MediaQuery.of(context).size.height;
+
+    var config = await Configuration.getConfig();
+    var apiKey = config['apiKey'];
 
     showModalBottomSheet(
       context: context,
@@ -1013,8 +1211,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     SizedBox(height: height * 0.01),
                     Expanded(
                       child: PlacePicker(
-                        apiKey:
-                            "AIzaSyCCO43655qj2NvMx-o765XuddYontDAvRk", // ใช้ API Key ของคุณ
+                        apiKey: apiKey, // ใช้ API Key ของคุณ
                         onPlacePicked: (result) {
                           sameLocationAaddresstextShow.text =
                               result.formattedAddress.toString();

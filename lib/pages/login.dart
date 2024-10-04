@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:raidely/config/config.dart';
 import 'package:raidely/models/response/memberAllGetResponse.dart';
@@ -31,6 +32,7 @@ class _LoginPageState extends State<LoginPage> {
   bool isTyping = false;
   bool _isCheckedPassword = true;
   late Future<void> loadData;
+  final box = GetStorage();
 
   @override
   Widget build(BuildContext context) {
@@ -357,6 +359,9 @@ class _LoginPageState extends State<LoginPage> {
             loginKeepUser users = loginKeepUser();
             users.phone = phoneCth.text.toString();
             context.read<Appdata>().loginKeepUsers = users;
+            keepLocation keep = keepLocation();
+            keep.pickupLocation = box.read('pickupLocation');
+            context.read<Appdata>().pickupLocations = keep;
             Get.to(
               () => NavbottompagesPage(
                 selectedPage: 1,

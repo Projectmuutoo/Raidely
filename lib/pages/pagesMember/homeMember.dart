@@ -46,150 +46,150 @@ class _HomePageState extends State<HomePage> {
     double height = MediaQuery.of(context).size.height;
 
     return PopScope(
-      canPop: false,
-      child: Scaffold(
-        appBar: PreferredSize(
-          preferredSize: Size(
-            width,
-            width * 0.2,
-          ),
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: 0,
-              vertical: height * 0.008,
+        canPop: false,
+        child: Scaffold(
+          appBar: PreferredSize(
+            preferredSize: Size(
+              width,
+              width * 0.2,
             ),
-            child: AppBar(
-              title: Row(
-                children: [
-                  InkWell(
-                    onTap: () {
-                      Get.to(() => const ProfilePage());
-                    },
-                    child: Stack(
-                      children: [
-                        Container(
-                          height: height * 0.06,
-                          width: height * 0.06,
-                          decoration: const BoxDecoration(
-                            color: Color(0xffd9d9d9),
-                            shape: BoxShape.circle,
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: 0,
+                vertical: height * 0.008,
+              ),
+              child: AppBar(
+                title: Row(
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        Get.to(() => const ProfilePage());
+                      },
+                      child: Stack(
+                        children: [
+                          Container(
+                            height: height * 0.06,
+                            width: height * 0.06,
+                            decoration: const BoxDecoration(
+                              color: Color(0xffd9d9d9),
+                              shape: BoxShape.circle,
+                            ),
                           ),
-                        ),
-                        Positioned(
-                          bottom: 0,
-                          left: 0,
-                          right: 0,
-                          child: SvgPicture.string(
-                            '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 2a5 5 0 1 0 5 5 5 5 0 0 0-5-5zm0 8a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm9 11v-1a7 7 0 0 0-7-7h-4a7 7 0 0 0-7 7v1h2v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1z"></path></svg>',
-                            height: height * 0.05,
-                            color: Colors.grey,
+                          Positioned(
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            child: SvgPicture.string(
+                              '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 2a5 5 0 1 0 5 5 5 5 0 0 0-5-5zm0 8a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm9 11v-1a7 7 0 0 0-7-7h-4a7 7 0 0 0-7 7v1h2v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1z"></path></svg>',
+                              height: height * 0.05,
+                              color: Colors.grey,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: width * 0.02,
-                    ),
-                    child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start, // จัดตัวอักษรแนวตั้ง
-                      children: [
-                        Text(
-                          'ธเนดดดดดดดด',
-                          style: TextStyle(
-                            fontSize: Get.textTheme.titleMedium!.fontSize,
-                            color: Colors.black,
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: width * 0.02,
+                      ),
+                      child: Column(
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start, // จัดตัวอักษรแนวตั้ง
+                        children: [
+                          Text(
+                            'ธเนดดดดดดดด',
+                            style: TextStyle(
+                              fontSize: Get.textTheme.titleMedium!.fontSize,
+                              color: Colors.black,
+                            ),
                           ),
-                        ),
-                        Stack(
-                          children: [
-                            Container(
-                              height: height * 0.04,
-                              width: width * 0.6,
-                              decoration: BoxDecoration(
-                                color: const Color(0xffE0D7C3),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: TextField(
-                                controller: searchCth,
-                                keyboardType: TextInputType.phone,
-                                cursorColor: Colors.black,
-                                decoration: InputDecoration(
-                                  hintText: isTyping
-                                      ? ''
-                                      : 'ใส่เบอร์คนที่คุณอยากส่งของ',
-                                  hintStyle: TextStyle(
-                                    fontSize:
-                                        Get.textTheme.labelMedium!.fontSize,
-                                    color: const Color(0xff898989),
-                                  ),
-                                  constraints: BoxConstraints(
-                                    maxHeight: height * 0.05,
-                                  ),
-                                  contentPadding: EdgeInsets.only(
-                                    left: width * 0.08,
-                                    right: width * 0.04,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                    borderSide: BorderSide.none,
+                          Stack(
+                            children: [
+                              Container(
+                                height: height * 0.04,
+                                width: width * 0.6,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xffE0D7C3),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: TextField(
+                                  controller: searchCth,
+                                  keyboardType: TextInputType.phone,
+                                  cursorColor: Colors.black,
+                                  decoration: InputDecoration(
+                                    hintText: isTyping
+                                        ? ''
+                                        : 'ใส่เบอร์คนที่คุณอยากส่งของ',
+                                    hintStyle: TextStyle(
+                                      fontSize:
+                                          Get.textTheme.labelMedium!.fontSize,
+                                      color: const Color(0xff898989),
+                                    ),
+                                    constraints: BoxConstraints(
+                                      maxHeight: height * 0.05,
+                                    ),
+                                    contentPadding: EdgeInsets.only(
+                                      left: width * 0.08,
+                                      right: width * 0.04,
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: BorderSide.none,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            Positioned(
-                              top: 0,
-                              bottom: 0,
-                              left: width * 0.01,
-                              child: SvgPicture.string(
-                                '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M10 18a7.952 7.952 0 0 0 4.897-1.688l4.396 4.396 1.414-1.414-4.396-4.396A7.952 7.952 0 0 0 18 10c0-4.411-3.589-8-8-8s-8 3.589-8 8 3.589 8 8 8zm0-14c3.309 0 6 2.691 6 6s-2.691 6-6 6-6-2.691-6-6 2.691-6 6-6z"></path></svg>',
-                                height: height * 0.03,
-                                color: const Color(0xff51281D),
+                              Positioned(
+                                top: 0,
+                                bottom: 0,
+                                left: width * 0.01,
+                                child: SvgPicture.string(
+                                  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M10 18a7.952 7.952 0 0 0 4.897-1.688l4.396 4.396 1.414-1.414-4.396-4.396A7.952 7.952 0 0 0 18 10c0-4.411-3.589-8-8-8s-8 3.589-8 8 3.589 8 8 8zm0-14c3.309 0 6 2.691 6 6s-2.691 6-6 6-6-2.691-6-6 2.691-6 6-6z"></path></svg>',
+                                  height: height * 0.03,
+                                  color: const Color(0xff51281D),
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              backgroundColor: Colors.white,
-              elevation: 1,
-              automaticallyImplyLeading: false,
-            ),
-          ),
-        ),
-        body: FutureBuilder(
-          future: null,
-          builder: (context, snapshot) {
-            // if (snapshot.connectionState != ConnectionState.done) {
-            //   return Container(
-            //     color: Colors.white,
-            //     child: const Center(
-            //       child: CircularProgressIndicator(),
-            //     ),
-            //   );
-            // }
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  RefreshIndicator(
-                    onRefresh: loadDataAsync,
-                    child: SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      child: Column(
-                        children: [],
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+                backgroundColor: Colors.white,
+                elevation: 1,
+                automaticallyImplyLeading: false,
               ),
-            );
-          }),
-    );
+            ),
+          ),
+          body: FutureBuilder(
+              future: null,
+              builder: (context, snapshot) {
+                // if (snapshot.connectionState != ConnectionState.done) {
+                //   return Container(
+                //     color: Colors.white,
+                //     child: const Center(
+                //       child: CircularProgressIndicator(),
+                //     ),
+                //   );
+                // }
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      RefreshIndicator(
+                        onRefresh: loadDataAsync,
+                        child: SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: Column(
+                            children: [],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+        ));
   }
 }

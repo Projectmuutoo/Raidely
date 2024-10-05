@@ -169,7 +169,7 @@ class _HomePageState extends State<HomePage> {
                   RefreshIndicator(
                     onRefresh: loadDataAsync,
                     child: SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
+                      physics: AlwaysScrollableScrollPhysics(),
                       child: Column(
                         children: [],
                       ),

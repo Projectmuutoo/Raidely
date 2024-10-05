@@ -9,9 +9,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:google_maps_place_picker_mb/google_maps_place_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:map_location_picker/map_location_picker.dart';
+import 'package:provider/provider.dart';
 import 'package:raidely/config/config.dart';
 import 'package:raidely/models/request/registerMemberPostRequest.dart';
 import 'package:raidely/models/request/registerRiderPostRequest.dart';
@@ -19,6 +21,7 @@ import 'package:raidely/models/response/memberAllGetResponse.dart';
 import 'package:raidely/models/response/riderAllGetResponse.dart';
 import 'package:raidely/pages/login.dart';
 import 'package:http/http.dart' as http;
+import 'package:raidely/shared/appData.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -60,6 +63,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final ImagePicker picker = ImagePicker();
   XFile? image;
   File? savedFile;
+  final box = GetStorage();
 
   @override
   void initState() {
@@ -1671,7 +1675,6 @@ class _RegisterPageState extends State<RegisterPage> {
               ],
             );
           } else {
-            late RegisterMemberPostRequest jsonRegisterMember;
             String downloadUrl = "";
             if (savedFile != null) {
               // แสดง Loading Indicator
@@ -1723,7 +1726,8 @@ class _RegisterPageState extends State<RegisterPage> {
             }
             //ถ้า password ตรงกัน
             if (passwordCth.text == passwordCheckCtl.text) {
-              jsonRegisterMember = RegisterMemberPostRequest(
+              RegisterMemberPostRequest jsonRegisterMember =
+                  RegisterMemberPostRequest(
                 name: nameCth.text,
                 phone: phoneCth.text,
                 password: passwordCth.text,
@@ -1739,6 +1743,10 @@ class _RegisterPageState extends State<RegisterPage> {
               );
 
               if (responsePostJsonRegisterMember.statusCode == 200) {
+                keepLocation keep = keepLocation();
+                keep.pickupLocation = sameLocationAaddressText.text;
+                context.read<Appdata>().pickupLocations = keep;
+                box.write('pickupLocation', sameLocationAaddressText.text);
                 Get.defaultDialog(
                   title: "",
                   titlePadding: EdgeInsets.zero,
@@ -1991,6 +1999,9 @@ class _RegisterPageState extends State<RegisterPage> {
     // ใช้ height สำหรับ vertical
     double height = MediaQuery.of(context).size.height;
 
+    var config = await Configuration.getConfig();
+    var apiKey = config['apiKey'];
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -2104,8 +2115,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     SizedBox(height: height * 0.01),
                     Expanded(
                       child: PlacePicker(
-                        apiKey:
-                            "AIzaSyCCO43655qj2NvMx-o765XuddYontDAvRk", // ใช้ API Key ของคุณ
+                        apiKey: apiKey, // ใช้ API Key ของคุณ
                         onPlacePicked: (result) {
                           sameLocationAaddresstextShow.text =
                               result.formattedAddress.toString();

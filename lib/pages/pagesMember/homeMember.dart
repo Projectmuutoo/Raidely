@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:raidely/pages/login.dart';
+import 'package:provider/provider.dart';
+import 'package:raidely/config/config.dart';
+import 'package:http/http.dart' as http;
+import 'package:raidely/models/response/byPhoneMemberGetResponse.dart';
 import 'package:raidely/pages/pagesMember/profileUser.dart';
+import 'package:raidely/shared/appData.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -16,6 +19,7 @@ class _HomePageState extends State<HomePage> {
   TextEditingController searchCth = TextEditingController();
   late Future<void> loadData;
   bool isTyping = false;
+  late List<ByPhoneMemberGetResponse> resultsResponseMemberBody = [];
 
   @override
   void initState() {
@@ -23,7 +27,14 @@ class _HomePageState extends State<HomePage> {
     super.initState();
   }
 
-  Future<void> loadDataAsync() async {}
+  Future<void> loadDataAsync() async {
+    var config = await Configuration.getConfig();
+    var url = config['apiEndpoint'].toString();
+    var phone = context.read<Appdata>().loginKeepUsers.phone;
+    var responseMember = await http.get(Uri.parse('$url/member/$phone'));
+    resultsResponseMemberBody =
+        byPhoneMemberGetResponseFromJson(responseMember.body);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -169,7 +180,7 @@ class _HomePageState extends State<HomePage> {
                   RefreshIndicator(
                     onRefresh: loadDataAsync,
                     child: SingleChildScrollView(
-                      physics: AlwaysScrollableScrollPhysics(),
+                      physics: const AlwaysScrollableScrollPhysics(),
                       child: Column(
                         children: [],
                       ),
@@ -178,9 +189,7 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             );
-          },
-        ),
-      ),
+          }),
     );
   }
 }

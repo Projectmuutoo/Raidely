@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 
 class Appdata with ChangeNotifier {
   late loginKeepUser loginKeepUsers;
+  late keepLocation pickupLocations;
 }
 
 class loginKeepUser {
   String phone = '';
-  // String fullname = '';
+}
+
+class keepLocation {
+  String pickupLocation = '';
 }

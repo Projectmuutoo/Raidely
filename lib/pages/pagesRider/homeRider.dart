@@ -7,9 +7,9 @@ import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:raidely/config/config.dart';
 import 'package:raidely/models/response/byPhoneRiderGetResponse.dart';
-import 'package:raidely/pages/login.dart';
 import 'package:http/http.dart' as http;
 import 'package:raidely/pages/pagesRider/getOrder.dart';
+import 'package:raidely/pages/pagesRider/profileRider.dart';
 import 'package:raidely/shared/appData.dart';
 
 class HomeriderPage extends StatefulWidget {
@@ -76,7 +76,7 @@ class _HomeriderPageState extends State<HomeriderPage> {
                     children: [
                       InkWell(
                         onTap: () {
-                          Get.to(() => const LoginPage());
+                          Get.to(() => const ProfileRiderPage());
                         },
                         child: Stack(
                           children: [
@@ -138,7 +138,7 @@ class _HomeriderPageState extends State<HomeriderPage> {
             ),
             body: Center(
               child: Column(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisSize: MainAxisSize.max,
                 children: [
                   RefreshIndicator(
                     onRefresh: loadDataAsync,

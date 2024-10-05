@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:google_maps_place_picker_mb/google_maps_place_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:map_location_picker/map_location_picker.dart';
@@ -19,14 +20,14 @@ import 'package:raidely/pages/login.dart';
 import 'package:raidely/shared/appData.dart';
 import 'package:http/http.dart' as http;
 
-class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+class ProfileUserPage extends StatefulWidget {
+  const ProfileUserPage({super.key});
 
   @override
-  State<ProfilePage> createState() => _ProfilePageState();
+  State<ProfileUserPage> createState() => _ProfileUserPageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _ProfileUserPageState extends State<ProfileUserPage> {
   late Future<void> loadData;
   TextEditingController phoneCth = TextEditingController();
   TextEditingController nameCth = TextEditingController();
@@ -42,6 +43,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final ImagePicker picker = ImagePicker();
   XFile? image;
   File? savedFile;
+  final box = GetStorage();
 
   @override
   void initState() {
@@ -1036,6 +1038,13 @@ class _ProfilePageState extends State<ProfilePage> {
     );
 
     if (responsePutJsonUpdateMember.statusCode == 200) {
+      if (latlng.text.isNotEmpty) {
+        box.write('pickupLocation', sameLocationAaddressText.text);
+        keepLocation keep = keepLocation();
+        keep.pickupLocation = box.read('pickupLocation');
+        context.read<Appdata>().pickupLocations = keep;
+      }
+
       setState(() {
         savedFile = null;
         loadDataAsync();

@@ -28,7 +28,7 @@ class _NavbottompagesPageState extends State<NavbottompagesPage> {
   void initState() {
     pageOptions = [
       CreateshippinglistPage(),
-      HomePage(),
+      HomeMemberPage(),
       ListproductsreceivedPage()
     ];
     loadData = loadDataAsync();

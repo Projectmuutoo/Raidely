@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
@@ -5,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:raidely/config/config.dart';
 import 'package:http/http.dart' as http;
 import 'package:raidely/models/response/byPhoneMemberGetResponse.dart';
+import 'package:raidely/pages/pagesMember/detailsShippingList.dart';
 import 'package:raidely/pages/pagesMember/profileUser.dart';
 import 'package:raidely/shared/appData.dart';
 
@@ -20,6 +24,7 @@ class _HomePageState extends State<HomePage> {
   late Future<void> loadData;
   bool isTyping = false;
   late List<ByPhoneMemberGetResponse> resultsResponseMemberBody = [];
+  late List<ByPhoneMemberGetResponse> listResultsResponeMember = [];
 
   @override
   void initState() {
@@ -137,6 +142,13 @@ class _HomePageState extends State<HomePage> {
                                       borderSide: BorderSide.none,
                                     ),
                                   ),
+                                  onChanged: (searchCth) {
+                                    setState(() {
+                                      isTyping = searchCth
+                                          .isNotEmpty; // ตรวจสอบว่ามีการพิมพ์อยู่หรือไม่
+                                    });
+                                    searchMember(searchCth);
+                                  },
                                 ),
                               ),
                               Positioned(
@@ -163,7 +175,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           body: FutureBuilder(
-              future: null,
+              future: loadData,
               builder: (context, snapshot) {
                 // if (snapshot.connectionState != ConnectionState.done) {
                 //   return Container(
@@ -182,7 +194,28 @@ class _HomePageState extends State<HomePage> {
                         child: SingleChildScrollView(
                           physics: const AlwaysScrollableScrollPhysics(),
                           child: Column(
-                            children: [],
+                            children: listResultsResponeMember.map((member) {
+                              return Card(
+                                margin: const EdgeInsets.symmetric(
+                                    vertical: 8, horizontal: 16),
+                                child: ListTile(
+                                  title: Text(member.name),
+                                  subtitle: Text(
+                                      'Phone: ${member.phone}\nAddress: ${member.address}'),
+                                  isThreeLine: true,
+                                  trailing: ElevatedButton(
+                                    onPressed: () => selectMember(
+                                        // context
+                                        //     .read<Appdata>()
+                                        //     .loginKeepUsers
+                                        //     .phone,
+                                        member
+                                            .phone), // เรียกฟังก์ชันที่ส่งเบอร์โทร
+                                    child: Text('เลือก'),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
                           ),
                         ),
                       ),
@@ -191,5 +224,25 @@ class _HomePageState extends State<HomePage> {
                 );
               }),
         ));
+  }
+
+  Future<void> searchMember(String value) async {
+    if (double.tryParse(value) == null) {
+      log('Value is NaN or not a number, skipping search.');
+      return; // หากค่าเป็น NaN หรือไม่ใช่หมายเลข ให้หยุดทำงานของฟังก์ชัน
+    }
+    var config = await Configuration.getConfig();
+    var url = config['apiEndpoint'].toString();
+    var response = await http.get(Uri.parse('$url/member/search/$value'));
+    listResultsResponeMember = byPhoneMemberGetResponseFromJson(response.body);
+    // listResultsResponeMember.forEach((member) {
+    //   log('Member ID: ${member.mid}, Name: ${member.name}, Phone: ${member.phone}, Address: ${member.address}, GPS: ${member.gps}');
+    // });
+    setState(() {});
+  }
+
+  selectMember(String recivephones) {
+    Get.to(() => DetailsShippingList(recivephones));
+    // log(deliveryphone + ' ' + recivephones);
   }
 }

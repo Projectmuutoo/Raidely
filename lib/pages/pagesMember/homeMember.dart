@@ -351,7 +351,7 @@ class _HomeMemberPageState extends State<HomeMemberPage> {
                                                 style: ElevatedButton.styleFrom(
                                                   fixedSize: Size(
                                                     width * 0.2,
-                                                    height * 0.05,
+                                                    height * 0.06,
                                                   ),
                                                   backgroundColor:
                                                       const Color(0xffAF4C31),

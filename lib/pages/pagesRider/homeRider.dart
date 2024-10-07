@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:raidely/config/config.dart';
 import 'package:raidely/models/response/byPhoneRiderGetResponse.dart';
 import 'package:http/http.dart' as http;
+import 'package:raidely/models/response/deliveryAllGetResponse.dart';
 import 'package:raidely/pages/pagesRider/getOrder.dart';
 import 'package:raidely/pages/pagesRider/profileRider.dart';
 import 'package:raidely/shared/appData.dart';
@@ -22,6 +23,7 @@ class HomeriderPage extends StatefulWidget {
 class _HomeriderPageState extends State<HomeriderPage> {
   late Future<void> loadData;
   late List<ByPhoneRiderGetResponse> resultsResponseRiderBody = [];
+  late List<DeliveryAllGetResponse> listResultsResponeDeliveryAll = [];
 
   @override
   void initState() {
@@ -36,6 +38,7 @@ class _HomeriderPageState extends State<HomeriderPage> {
     var responseRider = await http.get(Uri.parse('$url/rider/$phone'));
     resultsResponseRiderBody =
         byPhoneRiderGetResponseFromJson(responseRider.body);
+    listOrderRiderShow();
   }
 
   @override
@@ -136,32 +139,182 @@ class _HomeriderPageState extends State<HomeriderPage> {
                 ),
               ),
             ),
-            body: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  RefreshIndicator(
-                    onRefresh: loadDataAsync,
-                    child: SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      child: Column(
-                        children: [
-                          FilledButton(
-                            onPressed: () {
-                              Get.to(() => const GetorderPage());
-                            },
-                            child: Text('getOrder'),
-                          ),
-                        ],
-                      ),
-                    ),
+            body: Container(
+              color: const Color(0xffD9D9D9),
+              height: height,
+              child: RefreshIndicator(
+                onRefresh: loadDataAsync,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    children: listResultsResponeDeliveryAll.map(
+                      (value) {
+                        return Column(
+                          children: [
+                            Container(
+                              decoration: const BoxDecoration(
+                                color: Color(0xffFEF7E7),
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: Colors.grey,
+                                    width: 3,
+                                  ),
+                                ),
+                              ),
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: width * 0.03,
+                                  vertical: height * 0.01,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Image.network(
+                                          value.image,
+                                          width: width * 0.15,
+                                          fit: BoxFit.contain,
+                                        ),
+                                        Padding(
+                                          padding: EdgeInsets.only(
+                                            left: width * 0.03,
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                value.itemName,
+                                                style: TextStyle(
+                                                  fontSize: Get.textTheme
+                                                      .titleLarge!.fontSize,
+                                                  color:
+                                                      const Color(0xff51281D),
+                                                ),
+                                              ),
+                                              SizedBox(height: height * 0.005),
+                                              Text(
+                                                value.senderName,
+                                                style: TextStyle(
+                                                  fontSize: Get.textTheme
+                                                      .titleLarge!.fontSize,
+                                                  color:
+                                                      const Color(0xff51281D),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: height * 0.02),
+                                    Container(
+                                      width: width,
+                                      height: 1,
+                                      color: const Color(0xffBFBFBF),
+                                    ),
+                                    SizedBox(height: height * 0.01),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        ElevatedButton(
+                                          onPressed: () {},
+                                          style: ElevatedButton.styleFrom(
+                                            fixedSize: Size(
+                                              width * 0.32,
+                                              height * 0.05,
+                                            ),
+                                            backgroundColor:
+                                                const Color(0xff1EAC81),
+                                            elevation: 2,
+                                            shadowColor: Colors.black,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(24),
+                                            ),
+                                          ),
+                                          child: Text(
+                                            "รับออเดอร์นี้",
+                                            style: TextStyle(
+                                              fontSize: Get.textTheme
+                                                  .titleLarge!.fontSize,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () =>
+                                              getOrderDetails(value.did),
+                                          style: ElevatedButton.styleFrom(
+                                            fixedSize: Size(
+                                              width * 0.32,
+                                              height * 0.05,
+                                            ),
+                                            backgroundColor:
+                                                const Color(0xff7C7C7C),
+                                            elevation: 2,
+                                            shadowColor: Colors.black,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(24),
+                                            ),
+                                          ),
+                                          child: Text(
+                                            "รายละเอียด",
+                                            style: TextStyle(
+                                              fontSize: Get.textTheme
+                                                  .titleLarge!.fontSize,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: height * 0.01),
+                          ],
+                        );
+                      },
+                    ).toList(),
                   ),
-                ],
+                ),
               ),
             ),
           ),
         );
       },
     );
+  }
+
+  void getOrderDetails(int value) {
+    keepDidInTableDelivery keep = keepDidInTableDelivery();
+    keep.did = value.toString();
+    context.read<Appdata>().DidInTableDelivery = keep;
+    Get.to(() => const GetorderPage());
+  }
+
+  void listOrderRiderShow() async {
+    var config = await Configuration.getConfig();
+    var url = config['apiEndpoint'].toString();
+    var response = await http.get(Uri.parse('$url/delivery/all'));
+    var results = deliveryAllGetResponseFromJson(response.body);
+
+    //หาเฉพาะ รอไรเดอร์เข้ารับสินค้า เอาออกมาแสดง
+    var filteredResults = results
+        .where((value) => value.status == 'รอไรเดอร์เข้ารับสินค้า')
+        .toList();
+
+    if (filteredResults.isNotEmpty) {
+      listResultsResponeDeliveryAll = filteredResults;
+    } else {
+      listResultsResponeDeliveryAll = [];
+    }
+
+    setState(() {});
   }
 }

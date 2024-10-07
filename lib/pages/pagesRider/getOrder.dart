@@ -1,9 +1,15 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:provider/provider.dart';
+import 'package:raidely/config/config.dart';
+import 'package:raidely/models/response/deliveryByDidGetResponse.dart';
+import 'package:raidely/shared/appData.dart';
 
 class GetorderPage extends StatefulWidget {
   const GetorderPage({super.key});
@@ -18,9 +24,9 @@ class _GetorderPageState extends State<GetorderPage> {
   final Set<Marker> _markers = {};
   Polyline _polyline =
       const Polyline(polylineId: PolylineId('route'), points: []);
-  final LatLng startLocation = const LatLng(16.235467, 103.263328);
-  final LatLng endLocation =
-      const LatLng(16.251074388924696, 103.26200388715925);
+  late DeliveryByDidGetResponse listResultsResponeDeliveryByDid;
+  late LatLng startLocation;
+  late LatLng endLocation;
 
   @override
   void initState() {
@@ -29,17 +35,39 @@ class _GetorderPageState extends State<GetorderPage> {
   }
 
   Future<void> loadDataAsync() async {
-    final String apiKey = 'AIzaSyCCO43655qj2NvMx-o765XuddYontDAvRk';
-    final String url =
-        'https://maps.googleapis.com/maps/api/directions/json?origin=${startLocation.latitude},${startLocation.longitude}&destination=${endLocation.latitude},${endLocation.longitude}&key=$apiKey';
+    var config = await Configuration.getConfig();
+    var url = config['apiEndpoint'].toString();
+    var apiKey = config['apiKey'];
+    var did = context.read<Appdata>().DidInTableDelivery.did;
 
-    final response = await http.get(Uri.parse(url));
+    // เรียกข้อมูลจาก API
+    var response = await http.get(Uri.parse('$url/delivery/$did'));
+    listResultsResponeDeliveryByDid =
+        deliveryByDidGetResponseFromJson(response.body);
+
+    // แยกพิกัดจากข้อมูล sender
+    // List<String> latLng = listResultsResponeDeliveryByDid.senderGps.split(',');
+
+    // แปลงค่าที่แยกได้เป็น double
+    // double latitudeStart = double.parse(latLng[0].trim());
+    // double longitudeStart = double.parse(latLng[1].trim());
+
+    // กำหนดพิกัดปลายทาง
+    startLocation = const LatLng(16.235467, 103.263328);
+    endLocation = const LatLng(13.21495421336544, 101.05699026634406);
 
     if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      _createPolyline(data);
-    } else {
-      throw Exception('Failed to load directions');
+      // เรียก Google Directions API
+      final responseGoogleapis = await http.get(Uri.parse(
+        'https://maps.googleapis.com/maps/api/directions/json?origin=${startLocation.latitude},${startLocation.longitude}&destination=${endLocation.latitude},${endLocation.longitude}&key=$apiKey',
+      ));
+
+      if (responseGoogleapis.statusCode == 200) {
+        final data = jsonDecode(responseGoogleapis.body);
+        _createPolyline(data); // สร้างเส้นทางบนแผนที่
+      } else {
+        throw Exception('Failed to load directions');
+      }
     }
   }
 
@@ -79,159 +107,175 @@ class _GetorderPageState extends State<GetorderPage> {
           ],
         ),
       ),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            SizedBox(
-              height: height * 0.7, // 70% of the screen height
-              child: GoogleMap(
-                onMapCreated: (GoogleMapController controller) {
-                  mapController = controller;
-                  _addMarkerAndDrawRoute();
-                },
-                initialCameraPosition: CameraPosition(
-                  target: startLocation,
-                  zoom: 14.0,
+      body: FutureBuilder(
+          future: loadData,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState != ConnectionState.done) {
+              return Container(
+                color: Colors.white,
+                child: const Center(
+                  child: CircularProgressIndicator(),
                 ),
-                markers: _markers,
-                polylines: {_polyline}, // Add Polyline to Google Map
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: width * 0.02,
-                vertical: height * 0.005,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              );
+            }
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
                 children: [
-                  Column(
-                    children: [
-                      SizedBox(
-                        width: width * 0.7,
-                        child: Column(
+                  SizedBox(
+                    height: height * 0.7, // 70% of the screen height
+                    child: GoogleMap(
+                      onMapCreated: (GoogleMapController controller) {
+                        mapController = controller;
+                        _addMarkerAndDrawRoute();
+                      },
+                      initialCameraPosition: CameraPosition(
+                        target: startLocation,
+                        zoom: 14.0,
+                      ),
+                      markers: _markers,
+                      polylines: {_polyline}, // Add Polyline to Google Map
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: width * 0.02,
+                      vertical: height * 0.005,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
                           children: [
-                            Row(
-                              children: [
-                                Text(
-                                  'ชื่อผู้ส่ง: ',
-                                  style: TextStyle(
-                                    fontSize:
-                                        Get.textTheme.titleMedium?.fontSize,
-                                    color: Colors.black,
+                            SizedBox(
+                              width: width * 0.7,
+                              child: Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'ชื่อผู้ส่ง: ',
+                                        style: TextStyle(
+                                          fontSize: Get
+                                              .textTheme.titleMedium?.fontSize,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                      Text(
+                                        listResultsResponeDeliveryByDid
+                                            .senderName,
+                                        style: TextStyle(
+                                          fontSize: Get
+                                              .textTheme.titleMedium?.fontSize,
+                                          color: const Color(0xff606060),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                                Text(
-                                  'ธเนศ สรรพสิทธิ์',
-                                  style: TextStyle(
-                                    fontSize:
-                                        Get.textTheme.titleMedium?.fontSize,
-                                    color: const Color(0xff606060),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: height * 0.005),
-                            Row(
-                              children: [
-                                Container(
-                                  constraints: BoxConstraints(
-                                    maxWidth: width * 0.65,
-                                  ),
-                                  child: RichText(
-                                    text: TextSpan(
-                                      children: [
-                                        TextSpan(
-                                          text: 'ที่อยู่ผู้ส่ง: ',
-                                          style: TextStyle(
-                                            fontFamily: 'itim',
-                                            fontSize: Get.textTheme.titleMedium
-                                                ?.fontSize,
-                                            color: Colors.black,
+                                  SizedBox(height: height * 0.005),
+                                  Row(
+                                    children: [
+                                      Container(
+                                        constraints: BoxConstraints(
+                                          maxWidth: width * 0.65,
+                                        ),
+                                        child: RichText(
+                                          text: TextSpan(
+                                            children: [
+                                              TextSpan(
+                                                text: 'ที่อยู่ผู้ส่ง: ',
+                                                style: TextStyle(
+                                                  fontFamily: 'itim',
+                                                  fontSize: Get.textTheme
+                                                      .titleMedium?.fontSize,
+                                                  color: Colors.black,
+                                                ),
+                                              ),
+                                              TextSpan(
+                                                text:
+                                                    listResultsResponeDeliveryByDid
+                                                        .senderAddress,
+                                                style: TextStyle(
+                                                  fontFamily: 'itim',
+                                                  fontSize: Get.textTheme
+                                                      .titleMedium?.fontSize,
+                                                  color:
+                                                      const Color(0xff606060),
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
-                                        TextSpan(
-                                          text:
-                                              '999/27 ทีเจคัลเลอร์ ตำบลท่าขอนยาง จังหวัดมหาสารคาม 44150',
-                                          style: TextStyle(
-                                            fontFamily: 'itim',
-                                            fontSize: Get.textTheme.titleMedium
-                                                ?.fontSize,
-                                            color: const Color(0xff606060),
-                                          ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: height * 0.005),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'เบอร์โทรผู้ส่ง: ',
+                                        style: TextStyle(
+                                          fontSize: Get
+                                              .textTheme.titleMedium?.fontSize,
+                                          color: Colors.black,
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                      Text(
+                                        listResultsResponeDeliveryByDid
+                                            .senderPhone,
+                                        style: TextStyle(
+                                          fontSize: Get
+                                              .textTheme.titleMedium?.fontSize,
+                                          color: const Color(0xff606060),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: height * 0.005),
-                            Row(
-                              children: [
-                                Text(
-                                  'เบอร์โทรผู้ส่ง: ',
-                                  style: TextStyle(
-                                    fontSize:
-                                        Get.textTheme.titleMedium?.fontSize,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                                Text(
-                                  '0625500464',
-                                  style: TextStyle(
-                                    fontSize:
-                                        Get.textTheme.titleMedium?.fontSize,
-                                    color: const Color(0xff606060),
-                                  ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    children: [
-                      SizedBox(
-                        width: width * 0.25,
-                        child: Image.asset(
-                          'assets/images/red.png',
-                          height: height * 0.1,
+                        Column(
+                          children: [
+                            SizedBox(
+                              width: width * 0.25,
+                              child: Image.asset(
+                                'assets/images/red.png',
+                                height: height * 0.1,
+                              ),
+                            ),
+                          ],
                         ),
+                      ],
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      fixedSize: Size(
+                        width * 0.4,
+                        height * 0.05,
                       ),
-                    ],
+                      backgroundColor: const Color(0xff1EAC81),
+                      elevation: 3, //เงาล่าง
+                      shadowColor: Colors.black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24), // มุมโค้งมน
+                      ),
+                    ),
+                    child: Text(
+                      "รับออเดอร์นี้",
+                      style: TextStyle(
+                        fontSize: Get.textTheme.titleLarge!.fontSize,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ],
               ),
-            ),
-            ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                fixedSize: Size(
-                  width * 0.4,
-                  height * 0.05,
-                ),
-                backgroundColor: const Color(0xff1EAC81),
-                elevation: 3, //เงาล่าง
-                shadowColor: Colors.black,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24), // มุมโค้งมน
-                ),
-              ),
-              child: Text(
-                "รับออเดอร์นี้",
-                style: TextStyle(
-                  fontSize: Get.textTheme.titleLarge!.fontSize,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+            );
+          }),
     );
   }
 

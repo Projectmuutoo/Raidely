@@ -7,6 +7,8 @@ import 'package:raidely/models/response/byPhoneMemberGetResponse.dart';
 import 'package:raidely/shared/appData.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class DetailsShippingList extends StatefulWidget {
   final String receivePhones;
@@ -22,30 +24,32 @@ class _DetailsShippingListState extends State<DetailsShippingList> {
   List<ByPhoneMemberGetResponse> combinedMembers = [];
   XFile? image;
   final ImagePicker picker = ImagePicker();
-  late TextEditingController nameShipping = TextEditingController();
+  final TextEditingController nameShipping = TextEditingController();
+  LatLng? currentPosition;
+  LatLng? markerPosition;
+  GoogleMapController? mapController;
 
   @override
   void initState() {
-    loadData = loadDataAsync();
     super.initState();
+    loadData = loadDataAsync();
   }
 
   Future<void> loadDataAsync() async {
-    var config = await Configuration.getConfig();
-    var url = config['apiEndpoint'].toString();
-    var phone = context.read<Appdata>().loginKeepUsers.phone;
+    final config = await Configuration.getConfig();
+    final url = config['apiEndpoint'].toString();
+    final phone = context.read<Appdata>().loginKeepUsers.phone;
 
-    var responseCourierMember = await http.get(Uri.parse('$url/member/$phone'));
-    var courierMember =
+    final responseCourierMember =
+        await http.get(Uri.parse('$url/member/$phone'));
+    final courierMember =
         byPhoneMemberGetResponseFromJson(responseCourierMember.body);
-    var responseReceiveMember =
+    final responseReceiveMember =
         await http.get(Uri.parse('$url/member/${widget.receivePhones}'));
-    var receiveMember =
+    final receiveMember =
         byPhoneMemberGetResponseFromJson(responseReceiveMember.body);
 
     combinedMembers = [...courierMember, ...receiveMember].toSet().toList();
-
-    // log('Combined Members: ${combinedMembers.map((member) => member.toJson()).toList()}');
   }
 
   @override
@@ -57,30 +61,33 @@ class _DetailsShippingListState extends State<DetailsShippingList> {
       body: FutureBuilder(
         future: loadData,
         builder: (context, snapshot) {
-          // if (snapshot.connectionState == ConnectionState.waiting) {
-          //   return const Center(child: CircularProgressIndicator());
-          // } else if (snapshot.hasError) {
-          //   return Center(child: Text('Error: ${snapshot.error}'));
-          // }
-          // if (combinedMembers.isEmpty) {
-          //   return const Center(child: Text('No members found.'));
-          // }
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (combinedMembers.isEmpty) {
+            return const Center(child: Text('No members found.'));
+          }
 
           return Center(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                TextField(
-                  controller: nameShipping,
-                  decoration: const InputDecoration(
-                    labelText: 'ชื่อสินค้า',
-                    border: OutlineInputBorder(),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextField(
+                    controller: nameShipping,
+                    decoration: const InputDecoration(
+                      labelText: 'ชื่อสินค้า',
+                      border: OutlineInputBorder(),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
                 Expanded(
-                  child: ListView.builder(
+                  child: ListView.separated(
                     itemCount: combinedMembers.length,
+                    separatorBuilder: (context, index) => const Divider(),
                     itemBuilder: (context, index) {
                       final member = combinedMembers[index];
                       String titleLabel;
@@ -108,7 +115,7 @@ class _DetailsShippingListState extends State<DetailsShippingList> {
                     },
                   ),
                 ),
-                //แสดงรูป
+                // แสดงรูป
                 const SizedBox(height: 20),
                 if (image != null)
                   Image.file(
@@ -123,23 +130,24 @@ class _DetailsShippingListState extends State<DetailsShippingList> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     FilledButton(
-                        onPressed: gallaryPicture,
-                        child: const Text('Gallery')),
+                      onPressed: galleryPicture,
+                      child: const Text('Gallery'),
+                    ),
                     FilledButton(
-                        onPressed: cameraPicture, child: const Text('Camera')),
+                      onPressed: cameraPicture,
+                      child: const Text('Camera'),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 20),
 
-                //button จุดรับสินค้า
-                Column(
-                  children: [
-                    FilledButton(
-                        onPressed: getGPS, child: const Text('จุดรับสินค้า'))
-                  ],
+                // Button จุดรับสินค้า
+                FilledButton(
+                  onPressed: getGPS,
+                  child: const Text('จุดรับสินค้า'),
                 ),
 
-                // buttonยืนยัน ยกเลิก
+                // Button ยืนยัน ยกเลิก
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -161,10 +169,8 @@ class _DetailsShippingListState extends State<DetailsShippingList> {
     );
   }
 
-  void getGPS() {}
-
-  void cameraPicture() async {
-    XFile? pickedImage = await picker.pickImage(source: ImageSource.camera);
+  Future<void> cameraPicture() async {
+    final pickedImage = await picker.pickImage(source: ImageSource.camera);
     if (pickedImage != null) {
       setState(() {
         image = pickedImage;
@@ -172,10 +178,109 @@ class _DetailsShippingListState extends State<DetailsShippingList> {
     }
   }
 
-  void gallaryPicture() async {
-    XFile? selectedImage = await picker.pickImage(source: ImageSource.gallery);
+  Future<void> galleryPicture() async {
+    final selectedImage = await picker.pickImage(source: ImageSource.gallery);
+    if (selectedImage != null) {
+      setState(() {
+        image = selectedImage;
+      });
+    }
+  }
+
+  Future<void> getGPS() async {
+    final permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      print('Location permissions are denied');
+      return;
+    }
+
+    final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
     setState(() {
-      image = selectedImage;
+      currentPosition = LatLng(position.latitude, position.longitude);
     });
+
+    showMap();
+  }
+
+  void showMap() {
+    if (currentPosition != null) {
+      markerPosition = currentPosition;
+
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Current Location'),
+            content: SizedBox(
+              height: 400,
+              width: 400,
+              child: GoogleMap(
+                onMapCreated: (GoogleMapController controller) {
+                  mapController = controller;
+                },
+                initialCameraPosition: CameraPosition(
+                  target: currentPosition!,
+                  zoom: 15,
+                ),
+                markers: {
+                  if (markerPosition != null)
+                    Marker(
+                      markerId: const MarkerId('currentLocation'),
+                      position: markerPosition!,
+                      infoWindow: const InfoWindow(title: 'Your Location'),
+                    ),
+                },
+                onTap: (LatLng latLng) {
+                  setState(() {
+                    markerPosition = latLng; // อัปเดตตำแหน่งของมาร์กเกอร์
+                  });
+                  mapController?.animateCamera(CameraUpdate.newLatLng(
+                      markerPosition!)); // เคลื่อนที่กล้องไปที่ตำแหน่งใหม่
+                  log('Marker moved to: ${latLng.latitude}, ${latLng.longitude}');
+                },
+              ),
+            ),
+            actions: [
+              TextButton(
+                child: const Text('Current Location'), // ปุ่มตำแหน่งปัจจุบัน
+                onPressed: () {
+                  if (currentPosition != null) {
+                    // อัปเดต markerPosition ด้วยตำแหน่งปัจจุบัน
+                    setState(() {
+                      markerPosition = currentPosition;
+                    });
+                    // ปรับกล้องไปที่ตำแหน่งปัจจุบัน
+                    mapController?.animateCamera(
+                      CameraUpdate.newLatLng(currentPosition!),
+                    );
+                    log('Current Location set to marker: ${currentPosition!.latitude}, ${currentPosition!.longitude}');
+                  }
+                },
+              ),
+              TextButton(
+                child: const Text('Close'),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              TextButton(
+                child: const Text('Confirm'),
+                onPressed: () {
+                  if (markerPosition != null) {
+                    getPointGpsToSender(markerPosition!);
+                    Navigator.of(context).pop();
+                  }
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
+  void getPointGpsToSender(LatLng position) {
+    log('Selected GPS Position: ${position.latitude}, ${position.longitude}');
+    // TODO: Send location to server
   }
 }

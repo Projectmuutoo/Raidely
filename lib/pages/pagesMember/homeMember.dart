@@ -402,9 +402,10 @@ class _HomeMemberPageState extends State<HomeMemberPage> {
     var url = config['apiEndpoint'].toString();
     var response = await http.get(Uri.parse('$url/member/search/$value'));
     listResultsResponeMember = byPhoneMemberGetResponseFromJson(response.body);
-    // listResultsResponeMember.forEach((member) {
-    //   log('Member ID: ${member.mid}, Name: ${member.name}, Phone: ${member.phone}, Address: ${member.address}, GPS: ${member.gps}');
-    // });
+    // กรองข้อมูลที่มีเบอร์โทรศัพท์ตรงกับผู้ใช้ที่ทำการค้นหา
+    listResultsResponeMember = listResultsResponeMember.where((member) {
+      return member.phone != context.read<Appdata>().loginKeepUsers.phone;
+    }).toList();
     setState(() {});
   }
 

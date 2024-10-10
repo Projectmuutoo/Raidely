@@ -135,7 +135,7 @@ class _DetailsShippingListState extends State<DetailsShippingList> {
                 Column(
                   children: [
                     FilledButton(
-                        onPressed: () {}, child: const Text('จุดรับสินค้า'))
+                        onPressed: getGPS, child: const Text('จุดรับสินค้า'))
                   ],
                 ),
 
@@ -160,6 +160,8 @@ class _DetailsShippingListState extends State<DetailsShippingList> {
       ),
     );
   }
+
+  void getGPS() {}
 
   void cameraPicture() async {
     XFile? pickedImage = await picker.pickImage(source: ImageSource.camera);

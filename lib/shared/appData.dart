@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
 
 class Appdata with ChangeNotifier {
-  late loginKeepUser loginKeepUsers;
-  late keepLocation pickupLocations;
-  late keepDidInTableDelivery DidInTableDelivery;
+  late LoginKeepUser loginKeepUsers;
+  late KeepLocation pickupLocations;
+  late KeepDidInTableDelivery didInTableDelivery;
+  late KeepPhoneFileDetailsShippingList phoneFileDetailsShippingList;
 }
 
-class loginKeepUser {
+class LoginKeepUser {
   String phone = '';
 }
 
-class keepLocation {
+class KeepLocation {
   String pickupLocation = '';
 }
 
-class keepDidInTableDelivery {
+class KeepDidInTableDelivery {
   String did = '';
+}
+
+class KeepPhoneFileDetailsShippingList {
+  String phone = '';
 }

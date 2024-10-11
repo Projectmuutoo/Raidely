@@ -356,10 +356,10 @@ class _LoginPageState extends State<LoginPage> {
             passwordRiders.contains(passwordCth.text)) {
           //ถ้าหาก phoneMembers เป็น true
           if (phoneMembers.contains(phoneCth.text)) {
-            loginKeepUser users = loginKeepUser();
+            LoginKeepUser users = LoginKeepUser();
             users.phone = phoneCth.text.toString();
             context.read<Appdata>().loginKeepUsers = users;
-            keepLocation keep = keepLocation();
+            KeepLocation keep = KeepLocation();
             keep.pickupLocation = box.read('pickupLocation');
             context.read<Appdata>().pickupLocations = keep;
             Get.to(
@@ -370,7 +370,7 @@ class _LoginPageState extends State<LoginPage> {
           }
           //ถ้าหาก phoneRiders เป็น true
           if (phoneRiders.contains(phoneCth.text)) {
-            loginKeepUser users = loginKeepUser();
+            LoginKeepUser users = LoginKeepUser();
             users.phone = phoneCth.text.toString();
             context.read<Appdata>().loginKeepUsers = users;
             Get.to(() => const HomeriderPage());

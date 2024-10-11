@@ -395,7 +395,7 @@ class _HomeMemberPageState extends State<HomeMemberPage> {
 
   Future<void> searchMember(String value) async {
     if (double.tryParse(value) == null) {
-      log('Value is NaN or not a number, skipping search.');
+      // log('Value is NaN or not a number, skipping search.');
       return; // หากค่าเป็น NaN หรือไม่ใช่หมายเลข ให้หยุดทำงานของฟังก์ชัน
     }
     var config = await Configuration.getConfig();
@@ -409,8 +409,10 @@ class _HomeMemberPageState extends State<HomeMemberPage> {
     setState(() {});
   }
 
-  selectMember(String recivephones) {
-    Get.to(() => DetailsShippingList(recivephones));
-    // log(deliveryphone + ' ' + recivephones);
+  selectMember(String phone) {
+    KeepPhoneFileDetailsShippingList keeps = KeepPhoneFileDetailsShippingList();
+    keeps.phone = phone;
+    context.read<Appdata>().phoneFileDetailsShippingList = keeps;
+    Get.to(() => const DetailsShippingList());
   }
 }

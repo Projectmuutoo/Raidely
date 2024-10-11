@@ -292,9 +292,9 @@ class _HomeriderPageState extends State<HomeriderPage> {
   }
 
   void getOrderDetails(int value) {
-    keepDidInTableDelivery keep = keepDidInTableDelivery();
+    KeepDidInTableDelivery keep = KeepDidInTableDelivery();
     keep.did = value.toString();
-    context.read<Appdata>().DidInTableDelivery = keep;
+    context.read<Appdata>().didInTableDelivery = keep;
     Get.to(() => const GetorderPage());
   }
 

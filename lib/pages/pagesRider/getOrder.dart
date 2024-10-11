@@ -38,7 +38,7 @@ class _GetorderPageState extends State<GetorderPage> {
     var config = await Configuration.getConfig();
     var url = config['apiEndpoint'].toString();
     var apiKey = config['apiKey'];
-    var did = context.read<Appdata>().DidInTableDelivery.did;
+    var did = context.read<Appdata>().didInTableDelivery.did;
 
     // เรียกข้อมูลจาก API
     var response = await http.get(Uri.parse('$url/delivery/$did'));

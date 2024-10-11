@@ -1743,7 +1743,7 @@ class _RegisterPageState extends State<RegisterPage> {
               );
 
               if (responsePostJsonRegisterMember.statusCode == 200) {
-                keepLocation keep = keepLocation();
+                KeepLocation keep = KeepLocation();
                 keep.pickupLocation = sameLocationAaddressText.text;
                 context.read<Appdata>().pickupLocations = keep;
                 box.write('pickupLocation', sameLocationAaddressText.text);

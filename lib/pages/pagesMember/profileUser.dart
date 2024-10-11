@@ -1040,7 +1040,7 @@ class _ProfileUserPageState extends State<ProfileUserPage> {
     if (responsePutJsonUpdateMember.statusCode == 200) {
       if (latlng.text.isNotEmpty) {
         box.write('pickupLocation', sameLocationAaddressText.text);
-        keepLocation keep = keepLocation();
+        KeepLocation keep = KeepLocation();
         keep.pickupLocation = box.read('pickupLocation');
         context.read<Appdata>().pickupLocations = keep;
       }

@@ -31,8 +31,8 @@ dependencies:
   flutter_localization: ^0.2.1
   google_maps_flutter_platform_interface: ^2.0.6
   flutter_polyline_points: ^2.1.0
-
-
+  geocoding: ^2.0.5
+  dotted_border: ^2.0.0
   
 dev_dependencies:
   flutter_test:

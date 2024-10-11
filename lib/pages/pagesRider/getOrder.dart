@@ -25,8 +25,8 @@ class _GetorderPageState extends State<GetorderPage> {
   Polyline _polyline =
       const Polyline(polylineId: PolylineId('route'), points: []);
   late DeliveryByDidGetResponse listResultsResponeDeliveryByDid;
-  late LatLng startLocation;
-  late LatLng endLocation;
+  late LatLng Riderlocation;
+  late LatLng Itemlocation;
 
   @override
   void initState() {
@@ -53,13 +53,13 @@ class _GetorderPageState extends State<GetorderPage> {
     // double longitudeStart = double.parse(latLng[1].trim());
 
     // กำหนดพิกัดปลายทาง
-    startLocation = const LatLng(16.235467, 103.263328);
-    endLocation = const LatLng(13.21495421336544, 101.05699026634406);
+    Riderlocation = const LatLng(16.235467, 103.263328);
+    Itemlocation = const LatLng(13.21495421336544, 101.05699026634406);
 
     if (response.statusCode == 200) {
       // เรียก Google Directions API
       final responseGoogleapis = await http.get(Uri.parse(
-        'https://maps.googleapis.com/maps/api/directions/json?origin=${startLocation.latitude},${startLocation.longitude}&destination=${endLocation.latitude},${endLocation.longitude}&key=$apiKey',
+        'https://maps.googleapis.com/maps/api/directions/json?origin=${Riderlocation.latitude},${Riderlocation.longitude}&destination=${Itemlocation.latitude},${Itemlocation.longitude}&key=$apiKey',
       ));
 
       if (responseGoogleapis.statusCode == 200) {
@@ -130,7 +130,7 @@ class _GetorderPageState extends State<GetorderPage> {
                         _addMarkerAndDrawRoute();
                       },
                       initialCameraPosition: CameraPosition(
-                        target: startLocation,
+                        target: Riderlocation,
                         zoom: 14.0,
                       ),
                       markers: _markers,
@@ -310,7 +310,7 @@ class _GetorderPageState extends State<GetorderPage> {
     _markers.add(
       Marker(
         markerId: const MarkerId('start'),
-        position: startLocation,
+        position: Riderlocation,
         infoWindow: const InfoWindow(
           title: 'จุดเริ่มต้น',
           snippet: 'รายละเอียดเกี่ยวกับจุดเริ่มต้น',
@@ -322,7 +322,7 @@ class _GetorderPageState extends State<GetorderPage> {
     _markers.add(
       Marker(
         markerId: const MarkerId('end'),
-        position: endLocation,
+        position: Itemlocation,
         infoWindow: const InfoWindow(
           title: 'ปลายทาง',
           snippet: 'รายละเอียดเกี่ยวกับปลายทาง',

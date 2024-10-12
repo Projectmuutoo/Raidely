@@ -853,7 +853,7 @@ class _ProfileRiderPageState extends State<ProfileRiderPage> {
       try {
         // สร้างอ้างอิงไปยัง Firebase Storage
         Reference storageReference = FirebaseStorage.instance.ref().child(
-            'uploads/${DateTime.now().millisecondsSinceEpoch}_${savedFile!.path.split('/').last}');
+            'shippingListUploadImage/${DateTime.now().millisecondsSinceEpoch}_${savedFile!.path.split('/').last}');
 
         // อัพโหลดไฟล์และรอจนกว่าจะเสร็จสิ้น
         UploadTask uploadTask = storageReference.putFile(savedFile!);

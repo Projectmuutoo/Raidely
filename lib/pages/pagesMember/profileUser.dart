@@ -992,7 +992,7 @@ class _ProfileUserPageState extends State<ProfileUserPage> {
       try {
         // สร้างอ้างอิงไปยัง Firebase Storage
         Reference storageReference = FirebaseStorage.instance.ref().child(
-            'uploads/${DateTime.now().millisecondsSinceEpoch}_${savedFile!.path.split('/').last}');
+            'uploadsImageProfile/${DateTime.now().millisecondsSinceEpoch}_${savedFile!.path.split('/').last}');
 
         // อัพโหลดไฟล์และรอจนกว่าจะเสร็จสิ้น
         UploadTask uploadTask = storageReference.putFile(savedFile!);

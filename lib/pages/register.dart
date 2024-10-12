@@ -1275,7 +1275,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     Reference storageReference = FirebaseStorage.instance
                         .ref()
                         .child(
-                            'uploads/${DateTime.now().millisecondsSinceEpoch}_${savedFile!.path.split('/').last}');
+                            'shippingListUploadImage/${DateTime.now().millisecondsSinceEpoch}_${savedFile!.path.split('/').last}');
 
                     // อัพโหลดไฟล์และรอจนกว่าจะเสร็จสิ้น
                     UploadTask uploadTask =
@@ -1710,7 +1710,7 @@ class _RegisterPageState extends State<RegisterPage> {
               try {
                 // สร้างอ้างอิงไปยัง Firebase Storage
                 Reference storageReference = FirebaseStorage.instance.ref().child(
-                    'uploads/${DateTime.now().millisecondsSinceEpoch}_${savedFile!.path.split('/').last}');
+                    'shippingListUploadImage/${DateTime.now().millisecondsSinceEpoch}_${savedFile!.path.split('/').last}');
 
                 // อัพโหลดไฟล์และรอจนกว่าจะเสร็จสิ้น
                 UploadTask uploadTask = storageReference.putFile(savedFile!);

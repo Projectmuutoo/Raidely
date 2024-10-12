@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:raidely/config/config.dart';
 import 'package:raidely/models/response/deliveryByDidGetResponse.dart';
 import 'package:raidely/shared/appData.dart';
+import 'package:geolocator/geolocator.dart';
 
 class GetorderPage extends StatefulWidget {
   const GetorderPage({super.key});
@@ -27,48 +28,12 @@ class _GetorderPageState extends State<GetorderPage> {
   late DeliveryByDidGetResponse listResultsResponeDeliveryByDid;
   late LatLng Riderlocation;
   late LatLng Itemlocation;
+  late LatLng currentRiderLocation;
 
   @override
   void initState() {
     loadData = loadDataAsync();
     super.initState();
-  }
-
-  Future<void> loadDataAsync() async {
-    var config = await Configuration.getConfig();
-    var url = config['apiEndpoint'].toString();
-    var apiKey = config['apiKey'];
-    var did = context.read<Appdata>().didInTableDelivery.did;
-
-    // เรียกข้อมูลจาก API
-    var response = await http.get(Uri.parse('$url/delivery/$did'));
-    listResultsResponeDeliveryByDid =
-        deliveryByDidGetResponseFromJson(response.body);
-
-    // แยกพิกัดจากข้อมูล sender
-    // List<String> latLng = listResultsResponeDeliveryByDid.senderGps.split(',');
-
-    // แปลงค่าที่แยกได้เป็น double
-    // double latitudeStart = double.parse(latLng[0].trim());
-    // double longitudeStart = double.parse(latLng[1].trim());
-
-    // กำหนดพิกัดปลายทาง
-    Riderlocation = const LatLng(16.235467, 103.263328);
-    Itemlocation = const LatLng(13.21495421336544, 101.05699026634406);
-
-    if (response.statusCode == 200) {
-      // เรียก Google Directions API
-      final responseGoogleapis = await http.get(Uri.parse(
-        'https://maps.googleapis.com/maps/api/directions/json?origin=${Riderlocation.latitude},${Riderlocation.longitude}&destination=${Itemlocation.latitude},${Itemlocation.longitude}&key=$apiKey',
-      ));
-
-      if (responseGoogleapis.statusCode == 200) {
-        final data = jsonDecode(responseGoogleapis.body);
-        _createPolyline(data); // สร้างเส้นทางบนแผนที่
-      } else {
-        throw Exception('Failed to load directions');
-      }
-    }
   }
 
   @override
@@ -277,6 +242,74 @@ class _GetorderPageState extends State<GetorderPage> {
             );
           }),
     );
+  }
+
+  Future<void> loadDataAsync() async {
+    var config = await Configuration.getConfig();
+    var url = config['apiEndpoint'].toString();
+    var apiKey = config['apiKey'];
+    var did = context.read<Appdata>().didInTableDelivery.did;
+
+    await _getCurrentLocation();
+
+    // เรียกข้อมูลจาก API
+    var response = await http.get(Uri.parse('$url/delivery/$did'));
+    listResultsResponeDeliveryByDid =
+        deliveryByDidGetResponseFromJson(response.body);
+
+    // แยกพิกัดจากข้อมูล sender
+    List<String> latLngSender =
+        listResultsResponeDeliveryByDid.senderGps.split(',');
+    List<String> latLngReceiver =
+        listResultsResponeDeliveryByDid.receiverGps.split(',');
+
+    // แปลงค่าของ sender
+    double senderLatitude = double.parse(latLngSender[0].trim());
+    double senderLongitude = double.parse(latLngSender[1].trim());
+    LatLng senderLocation = LatLng(senderLatitude, senderLongitude);
+    log("Sender - latitude: $senderLatitude, longitude: $senderLongitude");
+
+    // แปลงค่าของ receiver
+    double receiverLatitude = double.parse(latLngReceiver[0].trim());
+    double receiverLongitude = double.parse(latLngReceiver[1].trim());
+    LatLng receiverLocation = LatLng(receiverLatitude, receiverLongitude);
+    log("Receiver - latitude: $receiverLatitude, longitude: $receiverLongitude");
+
+    // กำหนดพิกัดปลายทาง
+    Riderlocation =
+        LatLng(currentRiderLocation.latitude, currentRiderLocation.longitude);
+
+    if (response.statusCode == 200) {
+      // เรียก Google Directions API และส่งค่า currentRiderLocation, senderLocation, receiverLocation ไป
+      await direction(
+          apiKey, currentRiderLocation, senderLocation, receiverLocation);
+    }
+  }
+
+  Future<void> direction(String apiKey, LatLng riderLocation,
+      LatLng senderLocation, LatLng receiverLocation) async {
+    // ใช้พิกัด currentRiderLocation (riderLocation) ที่ได้รับมา, sender และ receiver
+    final responseGoogleapis = await http.get(Uri.parse(
+      'https://maps.googleapis.com/maps/api/directions/json?origin=${riderLocation.latitude},${riderLocation.longitude}&destination=${receiverLocation.latitude},${receiverLocation.longitude}&waypoints=${senderLocation.latitude},${senderLocation.longitude}&key=$apiKey',
+    ));
+
+    if (responseGoogleapis.statusCode == 200) {
+      final data = jsonDecode(responseGoogleapis.body);
+      _createPolyline(data); // สร้างเส้นทางบนแผนที่
+    } else {
+      throw Exception('Failed to load directions');
+    }
+  }
+
+  Future<void> _getCurrentLocation() async {
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      currentRiderLocation = LatLng(position.latitude, position.longitude);
+      log("Current Location - latitude: ${currentRiderLocation.latitude}, longitude: ${currentRiderLocation.longitude}");
+    } catch (e) {
+      log("Error getting current location: $e");
+    }
   }
 
   void _createPolyline(Map<String, dynamic> data) {

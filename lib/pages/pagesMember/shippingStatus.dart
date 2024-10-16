@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
@@ -26,15 +27,31 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
   Polyline _polyline =
       const Polyline(polylineId: PolylineId('route'), points: []);
 
-  // Declare as nullable and check later
   LatLng? senderlocation;
   LatLng? itemlocation;
-  late LatLng currentRiderLocation;
+  LatLng? currentRiderLocation;
 
   @override
   void initState() {
     loadData = loadDataAsync();
     super.initState();
+
+    // Listen to real-time updates from Firestore
+    FirebaseFirestore.instance
+        .collection('rider')
+        .doc('test')
+        .snapshots()
+        .listen((snapshot) {
+      var data = snapshot.data();
+      if (data != null) {
+        List<String> latLngSender = data['gpsRider'].split(',');
+        setState(() {
+          senderlocation = LatLng(double.parse(latLngSender[0].trim()),
+              double.parse(latLngSender[1].trim()));
+        });
+        _addMarkerAndDrawRoute(); // Update map markers and routes
+      }
+    });
   }
 
   Future<void> loadDataAsync() async {
@@ -49,14 +66,9 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
         deliveryByDidGetResponseFromJson(response.body);
 
     // Parse sender and receiver locations
-    List<String> latLngSender =
-        listResultsResponeDeliveryByDid.senderGps.split(',');
     List<String> latLngReceiver =
         listResultsResponeDeliveryByDid.receiverGps.split(',');
 
-    // Set sender and receiver locations
-    senderlocation = LatLng(double.parse(latLngSender[0].trim()),
-        double.parse(latLngSender[1].trim()));
     itemlocation = LatLng(double.parse(latLngReceiver[0].trim()),
         double.parse(latLngReceiver[1].trim()));
 
@@ -137,11 +149,13 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
   }
 
   void _addMarkerAndDrawRoute() {
+    if (senderlocation == null || itemlocation == null) return;
+
     // Add Marker for start location
     _markers.add(
       Marker(
         markerId: const MarkerId('start'),
-        position: senderlocation!, // Use non-nullable senderlocation
+        position: senderlocation!,
         infoWindow: const InfoWindow(
           title: 'จุดเริ่มต้น',
           snippet: 'รายละเอียดเกี่ยวกับจุดเริ่มต้น',
@@ -153,7 +167,7 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
     _markers.add(
       Marker(
         markerId: const MarkerId('end'),
-        position: itemlocation!, // Use non-nullable itemlocation
+        position: itemlocation!,
         infoWindow: const InfoWindow(
           title: 'ปลายทาง',
           snippet: 'รายละเอียดเกี่ยวกับปลายทาง',

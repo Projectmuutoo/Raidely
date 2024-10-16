@@ -1,9 +1,12 @@
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:raidely/config/config.dart';
 import 'package:raidely/models/response/byPhoneRiderGetResponse.dart';
@@ -220,7 +223,9 @@ class _HomeriderPageState extends State<HomeriderPage> {
                                           MainAxisAlignment.spaceEvenly,
                                       children: [
                                         ElevatedButton(
-                                          onPressed: () {},
+                                          onPressed: () {
+                                            getOrder(value.did);
+                                          },
                                           style: ElevatedButton.styleFrom(
                                             fixedSize: Size(
                                               width * 0.32,
@@ -289,6 +294,19 @@ class _HomeriderPageState extends State<HomeriderPage> {
         );
       },
     );
+  }
+
+  getOrder(int value) async {
+    final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+    var db = FirebaseFirestore.instance;
+    var data = {
+      'gpsRider': '${position.latitude},${position.longitude}',
+      'did': value,
+      'status': 'ไรเดอร์เข้ารับสินค้าแล้ว'
+    };
+
+    db.collection('rider').doc('test').set(data);
   }
 
   void getOrderDetails(int value) {

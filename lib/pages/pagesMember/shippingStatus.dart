@@ -57,7 +57,6 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
   Future<void> loadDataAsync() async {
     var config = await Configuration.getConfig();
     var url = config['apiEndpoint'].toString();
-    var apiKey = config['apiKey'];
     var did = context.read<Appdata>().didFileShippingStatus.did;
 
     // Fetch data from API

@@ -297,6 +297,12 @@ class _HomeriderPageState extends State<HomeriderPage> {
   }
 
   getOrder(int value) async {
+    final permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      // print('Location permissions are denied');
+      return;
+    }
     final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
     var db = FirebaseFirestore.instance;
@@ -306,13 +312,25 @@ class _HomeriderPageState extends State<HomeriderPage> {
       'status': 'ไรเดอร์เข้ารับสินค้าแล้ว'
     };
 
-    db.collection('rider').doc('test').set(data);
+    db.collection('rider').doc('test$value').set(data);
+    KeepDidInTableDelivery keep = KeepDidInTableDelivery();
+    keep.clickGetorder = true;
+    keep.did = value.toString();
+    context.read<Appdata>().didInTableDelivery = keep;
+    Get.to(() => const GetorderPage());
   }
 
   void getOrderDetails(int value) {
     KeepDidInTableDelivery keep = KeepDidInTableDelivery();
     keep.did = value.toString();
     context.read<Appdata>().didInTableDelivery = keep;
+
+    if (context.read<Appdata>().didInTableDelivery.clickGetorder) {
+      KeepDidInTableDelivery keep = KeepDidInTableDelivery();
+      keep.clickGetorder = false;
+      keep.did = value.toString();
+      context.read<Appdata>().didInTableDelivery = keep;
+    }
     Get.to(() => const GetorderPage());
   }
 

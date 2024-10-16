@@ -18,6 +18,7 @@ class KeepLocation {
 
 class KeepDidInTableDelivery {
   String did = '';
+  bool clickGetorder = true;
 }
 
 class KeepPhoneFileDetailsShippingList {

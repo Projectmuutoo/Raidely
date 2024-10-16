@@ -5,6 +5,7 @@ class Appdata with ChangeNotifier {
   late KeepLocation pickupLocations;
   late KeepDidInTableDelivery didInTableDelivery;
   late KeepPhoneFileDetailsShippingList phoneFileDetailsShippingList;
+  late KeepDidFileShippingStatus didFileShippingStatus;
 }
 
 class LoginKeepUser {
@@ -21,4 +22,8 @@ class KeepDidInTableDelivery {
 
 class KeepPhoneFileDetailsShippingList {
   String phone = '';
+}
+
+class KeepDidFileShippingStatus {
+  String did = '';
 }

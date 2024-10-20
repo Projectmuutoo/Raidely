@@ -317,21 +317,26 @@ class _HomeriderPageState extends State<HomeriderPage> {
     keep.clickGetorder = true;
     keep.did = value.toString();
     context.read<Appdata>().didInTableDelivery = keep;
-    Get.to(() => const GetorderPage());
+
+    // Pass the value to GetorderPage
+    Get.to(() => const GetorderPage()); // Updated this line
   }
 
   void getOrderDetails(int value) {
+    // สร้าง KeepDidInTableDelivery ใหม่
     KeepDidInTableDelivery keep = KeepDidInTableDelivery();
     keep.did = value.toString();
     context.read<Appdata>().didInTableDelivery = keep;
 
+    // ตรวจสอบว่าค่าปัจจุบันคือ clickGetorder เป็น true หรือไม่
     if (context.read<Appdata>().didInTableDelivery.clickGetorder) {
-      KeepDidInTableDelivery keep = KeepDidInTableDelivery();
+      // ถ้าเป็น true, ปรับค่า clickGetorder เป็น false
       keep.clickGetorder = false;
-      keep.did = value.toString();
       context.read<Appdata>().didInTableDelivery = keep;
     }
-    Get.to(() => const GetorderPage());
+
+    // ส่งค่าที่ต้องการไปยัง GetorderPage
+    Get.to(() => const GetorderPage()); // ส่งค่า value ไปยัง GetorderPage
   }
 
   void listOrderRiderShow() async {

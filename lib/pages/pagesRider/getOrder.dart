@@ -1,13 +1,15 @@
+import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 
 import 'package:dotted_border/dotted_border.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -15,6 +17,7 @@ import 'package:raidely/config/config.dart';
 import 'package:raidely/models/response/deliveryByDidGetResponse.dart';
 import 'package:raidely/shared/appData.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class GetorderPage extends StatefulWidget {
   const GetorderPage({super.key});
@@ -26,19 +29,28 @@ class GetorderPage extends StatefulWidget {
 class _GetorderPageState extends State<GetorderPage> {
   late Future<void> loadData;
   late GoogleMapController mapController;
+
   final Set<Marker> _markers = {};
-  Polyline _polyline =
+  final Polyline _polyline =
       const Polyline(polylineId: PolylineId('route'), points: []);
   late DeliveryByDidGetResponse listResultsResponeDeliveryByDid;
   LatLng? Riderlocation;
   LatLng? Itemlocation;
+  LatLng? currentRiderLocation;
   bool clickGetOrder = false;
   File? savedFile;
   XFile? image;
   ImagePicker picker = ImagePicker();
+  Set<Marker> markers = {}; // Set ของ Marker
+  bool displayRiderSender = true;
+  bool displayRiderReceiver = true;
 
   @override
   void initState() {
+    Riderlocation = const LatLng(0.0, 0.0); // หรือค่าที่ต้องการ
+    Itemlocation = const LatLng(0.0, 0.0); // หรือค่าที่ต้องการ
+    Senderlocation = const LatLng(0.0, 0.0); // หรือค่าที่ต้องการ
+    Receiverlocation = const LatLng(0.0, 0.0); // หรือค่าที่ต้องการ
     loadData = loadDataAsync();
     var chick = context.read<Appdata>().didInTableDelivery.clickGetorder;
     if (chick) {
@@ -46,8 +58,80 @@ class _GetorderPageState extends State<GetorderPage> {
         clickGetOrder = chick;
       });
     }
-
     super.initState();
+    var did = context.read<Appdata>().didInTableDelivery.did;
+    FirebaseFirestore.instance
+        .collection('rider')
+        .doc('test${did}')
+        .snapshots()
+        .listen((snapshot) {
+      var data = snapshot.data();
+      if (data != null) {
+        List<String> latLngSender = data['gpsRider'].split(',');
+        setState(() {
+          Riderlocation = LatLng(double.parse(latLngSender[0].trim()),
+              double.parse(latLngSender[1].trim()));
+        });
+        _addMarkerAndDrawRoute(); // Update map markers and routes
+      }
+    });
+  }
+
+  Future<void> loadDataAsync() async {
+    try {
+      var config = await Configuration.getConfig();
+      var url = config['apiEndpoint'].toString();
+      var apiKey = config['apiKey'];
+      var did = context.read<Appdata>().didInTableDelivery.did;
+
+      await _getCurrentLocation(); // Get current location in real-time
+
+      // Fetch delivery details from your API
+      var response = await http.get(Uri.parse('$url/delivery/$did'));
+
+      if (response.statusCode == 200) {
+        listResultsResponeDeliveryByDid =
+            deliveryByDidGetResponseFromJson(response.body);
+
+        // Parse GPS coordinates of the sender and receiver
+        if (listResultsResponeDeliveryByDid.senderGps != null &&
+            listResultsResponeDeliveryByDid.receiverGps != null) {
+          List<String> latLngSender =
+              listResultsResponeDeliveryByDid.senderGps.split(',');
+          List<String> latLngReceiver =
+              listResultsResponeDeliveryByDid.receiverGps.split(',');
+
+          // ตรวจสอบค่าของ Sender GPS ก่อนตั้งค่า
+          if (listResultsResponeDeliveryByDid.senderGps != null) {
+            double senderLatitude = double.parse(latLngSender[0].trim());
+            double senderLongitude = double.parse(latLngSender[1].trim());
+            Senderlocation = LatLng(senderLatitude, senderLongitude);
+          } else {
+            log("Sender GPS data is null");
+          }
+
+          double receiverLatitude = double.parse(latLngReceiver[0].trim());
+          double receiverLongitude = double.parse(latLngReceiver[1].trim());
+          Receiverlocation = LatLng(receiverLatitude, receiverLongitude);
+
+          Riderlocation = LatLng(
+              currentRiderLocation.latitude, currentRiderLocation.longitude);
+
+          // Call getOrder only if clickGetOrder is true
+          if (clickGetOrder) {
+            getOrder(listResultsResponeDeliveryByDid.did, 0);
+          }
+
+          // Call the direction method to draw the route
+          _addMarkerAndDrawRoute();
+        }
+      } else {
+        throw Exception(
+            'Failed to fetch delivery data: ${response.statusCode}');
+      }
+    } catch (e) {
+      log("Error loading data: $e");
+    }
   }
 
   @override
@@ -495,10 +579,26 @@ class _GetorderPageState extends State<GetorderPage> {
                             ),
                           ),
                   ),
+                  //=================================================================================================
+                  //=================================================================================================
+                  //=================================================================================================
+                  //=================================================================================================
+                  //=================================================================================================
+                  //=================================================================================================
+                  //=================================================================================================
+                  //=================================================================================================
+                  //=================================================================================================
+                  //=================================================================================================
+                  //=================================================================================================
+                  //=================================================================================================
+                  //=================================================================================================
+                  //=================================================================================================
+
                   if (!clickGetOrder)
+                    //กดรายละเอียดมา
                     ElevatedButton(
                       onPressed: () {
-                        getOrder(listResultsResponeDeliveryByDid.did);
+                        getOrder(listResultsResponeDeliveryByDid.did, 0);
                       },
                       style: ElevatedButton.styleFrom(
                         fixedSize: Size(
@@ -521,8 +621,11 @@ class _GetorderPageState extends State<GetorderPage> {
                       ),
                     ),
                   if (clickGetOrder)
+                    //กดรับออเดอร์มา
                     ElevatedButton(
                       onPressed: () {
+                        getOrder(
+                            listResultsResponeDeliveryByDid.did, 1); // ส่งค่า 1
                         log('รับสินค้าแล้ว');
                       },
                       style: ElevatedButton.styleFrom(
@@ -546,13 +649,39 @@ class _GetorderPageState extends State<GetorderPage> {
                       ),
                     ),
                 ],
+                //=================================================================================================
+                //=================================================================================================
+                //=================================================================================================
+                //=================================================================================================
+                //=================================================================================================
+                //=================================================================================================
+                //=================================================================================================
+                //=================================================================================================
+                //=================================================================================================
+                //=================================================================================================
+                //=================================================================================================
               ),
             );
           }),
     );
   }
 
-  getOrder(int value) {
+  @override
+  void dispose() {
+    //ปิดหน้าจอ=หยุดรับตำแหน่งrider
+    stopLocationUpdates(); // Stop location updates when the page is disposed
+    mapController.dispose(); // Dispose of the map controller
+    super.dispose();
+  }
+
+//=================================================================================================
+//=================================================================================================
+//=================================================================================================
+//=================================================================================================
+//=================================================================================================
+//=================================================================================================
+//=================================================================================================
+  void getOrder(int value, int status) {
     setState(() {
       clickGetOrder = true;
     });
@@ -590,36 +719,6 @@ class _GetorderPageState extends State<GetorderPage> {
     // กำหนดพิกัดปลายทาง
     Riderlocation = LatLng(senderLatitude, senderLongitude);
     Itemlocation = LatLng(receiverLatitude, receiverLongitude);
-    _addMarkerAndDrawRoute();
-    setState(() {});
-  }
-
-  void _addMarkerAndDrawRoute() {
-    // Add Marker for start location
-    _markers.add(
-      Marker(
-        markerId: const MarkerId('start'),
-        position: Riderlocation!,
-        infoWindow: const InfoWindow(
-          title: 'จุดเริ่มต้น',
-          snippet: 'รายละเอียดเกี่ยวกับจุดเริ่มต้น',
-        ),
-      ),
-    );
-
-    // Add Marker for end location
-    _markers.add(
-      Marker(
-        markerId: const MarkerId('end'),
-        position: Itemlocation!,
-        infoWindow: const InfoWindow(
-          title: 'ปลายทาง',
-          snippet: 'รายละเอียดเกี่ยวกับปลายทาง',
-        ),
-      ),
-    );
-
-    // Fetch directions from Google Directions API
     setState(() {});
   }
 }

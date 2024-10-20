@@ -29,15 +29,16 @@ class GetorderPage extends StatefulWidget {
 class _GetorderPageState extends State<GetorderPage> {
   late Future<void> loadData;
   late GoogleMapController mapController;
+
   final Set<Marker> _markers = {};
-  Polyline _polyline =
+  final Polyline _polyline =
       const Polyline(polylineId: PolylineId('route'), points: []);
   late DeliveryByDidGetResponse listResultsResponeDeliveryByDid;
   late LatLng Riderlocation;
   late LatLng Itemlocation;
   late LatLng Senderlocation;
   late LatLng Receiverlocation;
-  LatLng currentRiderLocation = LatLng(0.0, 0.0); // Default value
+  LatLng currentRiderLocation = const LatLng(0.0, 0.0); // Default value
   StreamSubscription<Position>? positionStream;
   bool clickGetOrder = false;
   File? savedFile;
@@ -49,6 +50,10 @@ class _GetorderPageState extends State<GetorderPage> {
 
   @override
   void initState() {
+    Riderlocation = const LatLng(0.0, 0.0); // หรือค่าที่ต้องการ
+    Itemlocation = const LatLng(0.0, 0.0); // หรือค่าที่ต้องการ
+    Senderlocation = const LatLng(0.0, 0.0); // หรือค่าที่ต้องการ
+    Receiverlocation = const LatLng(0.0, 0.0); // หรือค่าที่ต้องการ
     loadData = loadDataAsync();
     var chick = context.read<Appdata>().didInTableDelivery.clickGetorder;
     if (chick) {
@@ -73,6 +78,63 @@ class _GetorderPageState extends State<GetorderPage> {
         _addMarkerAndDrawRoute(); // Update map markers and routes
       }
     });
+  }
+
+  Future<void> loadDataAsync() async {
+    try {
+      var config = await Configuration.getConfig();
+      var url = config['apiEndpoint'].toString();
+      var apiKey = config['apiKey'];
+      var did = context.read<Appdata>().didInTableDelivery.did;
+
+      await _getCurrentLocation(); // Get current location in real-time
+
+      // Fetch delivery details from your API
+      var response = await http.get(Uri.parse('$url/delivery/$did'));
+
+      if (response.statusCode == 200) {
+        listResultsResponeDeliveryByDid =
+            deliveryByDidGetResponseFromJson(response.body);
+
+        // Parse GPS coordinates of the sender and receiver
+        if (listResultsResponeDeliveryByDid.senderGps != null &&
+            listResultsResponeDeliveryByDid.receiverGps != null) {
+          List<String> latLngSender =
+              listResultsResponeDeliveryByDid.senderGps.split(',');
+          List<String> latLngReceiver =
+              listResultsResponeDeliveryByDid.receiverGps.split(',');
+
+          // ตรวจสอบค่าของ Sender GPS ก่อนตั้งค่า
+          if (listResultsResponeDeliveryByDid.senderGps != null) {
+            double senderLatitude = double.parse(latLngSender[0].trim());
+            double senderLongitude = double.parse(latLngSender[1].trim());
+            Senderlocation = LatLng(senderLatitude, senderLongitude);
+          } else {
+            log("Sender GPS data is null");
+          }
+
+          double receiverLatitude = double.parse(latLngReceiver[0].trim());
+          double receiverLongitude = double.parse(latLngReceiver[1].trim());
+          Receiverlocation = LatLng(receiverLatitude, receiverLongitude);
+
+          Riderlocation = LatLng(
+              currentRiderLocation.latitude, currentRiderLocation.longitude);
+
+          // Call getOrder only if clickGetOrder is true
+          if (clickGetOrder) {
+            getOrder(listResultsResponeDeliveryByDid.did, 0);
+          }
+
+          // Call the direction method to draw the route
+          _addMarkerAndDrawRoute();
+        }
+      } else {
+        throw Exception(
+            'Failed to fetch delivery data: ${response.statusCode}');
+      }
+    } catch (e) {
+      log("Error loading data: $e");
+    }
   }
 
   @override
@@ -520,6 +582,21 @@ class _GetorderPageState extends State<GetorderPage> {
                             ),
                           ),
                   ),
+                  //=================================================================================================
+                  //=================================================================================================
+                  //=================================================================================================
+                  //=================================================================================================
+                  //=================================================================================================
+                  //=================================================================================================
+                  //=================================================================================================
+                  //=================================================================================================
+                  //=================================================================================================
+                  //=================================================================================================
+                  //=================================================================================================
+                  //=================================================================================================
+                  //=================================================================================================
+                  //=================================================================================================
+
                   if (!clickGetOrder)
                     //กดรายละเอียดมา
                     ElevatedButton(
@@ -575,6 +652,17 @@ class _GetorderPageState extends State<GetorderPage> {
                       ),
                     ),
                 ],
+                //=================================================================================================
+                //=================================================================================================
+                //=================================================================================================
+                //=================================================================================================
+                //=================================================================================================
+                //=================================================================================================
+                //=================================================================================================
+                //=================================================================================================
+                //=================================================================================================
+                //=================================================================================================
+                //=================================================================================================
               ),
             );
           }),
@@ -589,64 +677,30 @@ class _GetorderPageState extends State<GetorderPage> {
     super.dispose();
   }
 
+//=================================================================================================
+//=================================================================================================
+//=================================================================================================
+//=================================================================================================
+//=================================================================================================
+//=================================================================================================
+//=================================================================================================
   void getOrder(int value, int status) {
     setState(() {
       clickGetOrder = true;
-
-      // เปลี่ยนค่า displayRiderSender ตามค่า status ที่ส่งมา
-      displayRiderSender = (status == 0); // แสดง Rider-Sender หาก status เป็น 0
+      displayRiderSender =
+          (status == 0); // เปลี่ยนเป็น 2 เพื่อแสดงทั้ง Sender และ Receiver
       displayRiderReceiver =
-          (status == 1); // แสดง Rider-Receiver หาก status เป็น 1
+          (status == 1); // เปลี่ยนเป็น 2 เพื่อแสดงทั้ง Sender และ Receiver
     });
     _addMarkerAndDrawRoute();
   }
 
-  Future<void> loadDataAsync() async {
-    try {
-      var config = await Configuration.getConfig();
-      var url = config['apiEndpoint'].toString();
-      var apiKey = config['apiKey'];
-      var did = context.read<Appdata>().didInTableDelivery.did;
-
-      await _getCurrentLocation(); // Get current location in real-time
-
-      // Fetch delivery details from your API
-      var response = await http.get(Uri.parse('$url/delivery/$did'));
-
-      if (response.statusCode == 200) {
-        listResultsResponeDeliveryByDid =
-            deliveryByDidGetResponseFromJson(response.body);
-
-        // Parse GPS coordinates of the sender and receiver
-        if (listResultsResponeDeliveryByDid.senderGps != null &&
-            listResultsResponeDeliveryByDid.receiverGps != null) {
-          List<String> latLngSender =
-              listResultsResponeDeliveryByDid.senderGps.split(',');
-          List<String> latLngReceiver =
-              listResultsResponeDeliveryByDid.receiverGps.split(',');
-
-          double senderLatitude = double.parse(latLngSender[0].trim());
-          double senderLongitude = double.parse(latLngSender[1].trim());
-          Senderlocation = LatLng(senderLatitude, senderLongitude);
-
-          double receiverLatitude = double.parse(latLngReceiver[0].trim());
-          double receiverLongitude = double.parse(latLngReceiver[1].trim());
-          Receiverlocation = LatLng(receiverLatitude, receiverLongitude);
-
-          Riderlocation = LatLng(
-              currentRiderLocation.latitude, currentRiderLocation.longitude);
-
-          // Call the direction method to draw the route
-
-          _addMarkerAndDrawRoute();
-        }
-      } else {
-        throw Exception('Failed to fetch delivery data');
-      }
-    } catch (e) {
-      log("Error loading data: $e");
-    }
-  }
+//=================================================================================================
+//=================================================================================================
+//=================================================================================================
+//=================================================================================================
+//=================================================================================================
+//=================================================================================================
 
   Future<void> _getCurrentLocation() async {
     try {

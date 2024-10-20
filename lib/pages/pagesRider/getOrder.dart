@@ -32,7 +32,6 @@ class _GetorderPageState extends State<GetorderPage> {
   late DeliveryByDidGetResponse listResultsResponeDeliveryByDid;
   LatLng? Riderlocation;
   LatLng? Itemlocation;
-  LatLng? currentRiderLocation;
   bool clickGetOrder = false;
   File? savedFile;
   XFile? image;
@@ -591,6 +590,36 @@ class _GetorderPageState extends State<GetorderPage> {
     // กำหนดพิกัดปลายทาง
     Riderlocation = LatLng(senderLatitude, senderLongitude);
     Itemlocation = LatLng(receiverLatitude, receiverLongitude);
+    _addMarkerAndDrawRoute();
+    setState(() {});
+  }
+
+  void _addMarkerAndDrawRoute() {
+    // Add Marker for start location
+    _markers.add(
+      Marker(
+        markerId: const MarkerId('start'),
+        position: Riderlocation!,
+        infoWindow: const InfoWindow(
+          title: 'จุดเริ่มต้น',
+          snippet: 'รายละเอียดเกี่ยวกับจุดเริ่มต้น',
+        ),
+      ),
+    );
+
+    // Add Marker for end location
+    _markers.add(
+      Marker(
+        markerId: const MarkerId('end'),
+        position: Itemlocation!,
+        infoWindow: const InfoWindow(
+          title: 'ปลายทาง',
+          snippet: 'รายละเอียดเกี่ยวกับปลายทาง',
+        ),
+      ),
+    );
+
+    // Fetch directions from Google Directions API
     setState(() {});
   }
 }

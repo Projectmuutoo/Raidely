@@ -3,7 +3,7 @@ import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
@@ -29,7 +29,6 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
 
   LatLng? senderlocation;
   LatLng? itemlocation;
-  LatLng? currentRiderLocation;
 
   @override
   void initState() {
@@ -39,7 +38,7 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
     // Listen to real-time updates from Firestore
     FirebaseFirestore.instance
         .collection('rider')
-        .doc('test')
+        .doc('test${context.read<Appdata>().didFileShippingStatus.did}')
         .snapshots()
         .listen((snapshot) {
       var data = snapshot.data();
@@ -48,8 +47,9 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
         setState(() {
           senderlocation = LatLng(double.parse(latLngSender[0].trim()),
               double.parse(latLngSender[1].trim()));
+          _addMarkerAndDrawRoute(); // Update map markers and routes
+          _fetchRoute();
         });
-        _addMarkerAndDrawRoute(); // Update map markers and routes
       }
     });
   }
@@ -57,6 +57,7 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
   Future<void> loadDataAsync() async {
     var config = await Configuration.getConfig();
     var url = config['apiEndpoint'].toString();
+    var apiKey = config['apiKey'];
     var did = context.read<Appdata>().didFileShippingStatus.did;
 
     // Fetch data from API
@@ -66,11 +67,11 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
 
     // Parse sender and receiver locations
     List<String> latLngReceiver =
-        listResultsResponeDeliveryByDid.receiverGps.split(',');
+        listResultsResponeDeliveryByDid.senderGps.split(',');
 
     itemlocation = LatLng(double.parse(latLngReceiver[0].trim()),
         double.parse(latLngReceiver[1].trim()));
-
+    _fetchRoute();
     setState(() {});
   }
 
@@ -148,8 +149,6 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
   }
 
   void _addMarkerAndDrawRoute() {
-    if (senderlocation == null || itemlocation == null) return;
-
     // Add Marker for start location
     _markers.add(
       Marker(
@@ -174,8 +173,48 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
       ),
     );
 
-    setState(() {
-      // Update the map when adding markers
-    });
+    // Fetch directions from Google Directions API
+    setState(() {});
+  }
+
+  void _fetchRoute() async {
+    var config = await Configuration.getConfig();
+    var apiKey = config['apiKey'];
+    var url =
+        "https://maps.googleapis.com/maps/api/directions/json?origin=${senderlocation!.latitude},${senderlocation!.longitude}&destination=${itemlocation!.latitude},${itemlocation!.longitude}&key=$apiKey";
+
+    var response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      var data = jsonDecode(response.body);
+      _createPolyline(data);
+    } else {
+      log('Failed to load directions');
+    }
+  }
+
+  void _createPolyline(Map<String, dynamic> data) {
+    // Check if routes are available
+    if (data['routes'].isNotEmpty) {
+      List<dynamic> steps = data['routes'][0]['legs'][0]['steps'];
+      List<LatLng> polylinePoints = [];
+
+      // Extract points from each step
+      for (var step in steps) {
+        String encodedPolyline = step['polyline']['points'];
+        List<PointLatLng> decodedPoints =
+            PolylinePoints().decodePolyline(encodedPolyline);
+        polylinePoints.addAll(decodedPoints
+            .map((point) => LatLng(point.latitude, point.longitude)));
+      }
+
+      setState(() {
+        _polyline = Polyline(
+          polylineId: const PolylineId('route'),
+          color: Colors.blue,
+          width: 5,
+          points: polylinePoints,
+        );
+      });
+    }
   }
 }

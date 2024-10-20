@@ -1,13 +1,15 @@
+import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 
 import 'package:dotted_border/dotted_border.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -15,6 +17,7 @@ import 'package:raidely/config/config.dart';
 import 'package:raidely/models/response/deliveryByDidGetResponse.dart';
 import 'package:raidely/shared/appData.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class GetorderPage extends StatefulWidget {
   const GetorderPage({super.key});
@@ -30,13 +33,19 @@ class _GetorderPageState extends State<GetorderPage> {
   Polyline _polyline =
       const Polyline(polylineId: PolylineId('route'), points: []);
   late DeliveryByDidGetResponse listResultsResponeDeliveryByDid;
-  LatLng? Riderlocation;
-  LatLng? Itemlocation;
-  LatLng? currentRiderLocation;
+  late LatLng Riderlocation;
+  late LatLng Itemlocation;
+  late LatLng Senderlocation;
+  late LatLng Receiverlocation;
+  LatLng currentRiderLocation = LatLng(0.0, 0.0); // Default value
+  StreamSubscription<Position>? positionStream;
   bool clickGetOrder = false;
   File? savedFile;
   XFile? image;
   ImagePicker picker = ImagePicker();
+  Set<Marker> markers = {}; // Set ของ Marker
+  bool displayRiderSender = true;
+  bool displayRiderReceiver = true;
 
   @override
   void initState() {
@@ -47,8 +56,23 @@ class _GetorderPageState extends State<GetorderPage> {
         clickGetOrder = chick;
       });
     }
-
     super.initState();
+    var did = context.read<Appdata>().didInTableDelivery.did;
+    FirebaseFirestore.instance
+        .collection('rider')
+        .doc('test${did}')
+        .snapshots()
+        .listen((snapshot) {
+      var data = snapshot.data();
+      if (data != null) {
+        List<String> latLngSender = data['gpsRider'].split(',');
+        setState(() {
+          Riderlocation = LatLng(double.parse(latLngSender[0].trim()),
+              double.parse(latLngSender[1].trim()));
+        });
+        _addMarkerAndDrawRoute(); // Update map markers and routes
+      }
+    });
   }
 
   @override
@@ -497,9 +521,10 @@ class _GetorderPageState extends State<GetorderPage> {
                           ),
                   ),
                   if (!clickGetOrder)
+                    //กดรายละเอียดมา
                     ElevatedButton(
                       onPressed: () {
-                        getOrder(listResultsResponeDeliveryByDid.did);
+                        getOrder(listResultsResponeDeliveryByDid.did, 0);
                       },
                       style: ElevatedButton.styleFrom(
                         fixedSize: Size(
@@ -522,8 +547,11 @@ class _GetorderPageState extends State<GetorderPage> {
                       ),
                     ),
                   if (clickGetOrder)
+                    //กดรับออเดอร์มา
                     ElevatedButton(
                       onPressed: () {
+                        getOrder(
+                            listResultsResponeDeliveryByDid.did, 1); // ส่งค่า 1
                         log('รับสินค้าแล้ว');
                       },
                       style: ElevatedButton.styleFrom(
@@ -553,44 +581,170 @@ class _GetorderPageState extends State<GetorderPage> {
     );
   }
 
-  getOrder(int value) {
+  @override
+  void dispose() {
+    //ปิดหน้าจอ=หยุดรับตำแหน่งrider
+    stopLocationUpdates(); // Stop location updates when the page is disposed
+    mapController.dispose(); // Dispose of the map controller
+    super.dispose();
+  }
+
+  void getOrder(int value, int status) {
     setState(() {
       clickGetOrder = true;
+
+      // เปลี่ยนค่า displayRiderSender ตามค่า status ที่ส่งมา
+      displayRiderSender = (status == 0); // แสดง Rider-Sender หาก status เป็น 0
+      displayRiderReceiver =
+          (status == 1); // แสดง Rider-Receiver หาก status เป็น 1
     });
+    _addMarkerAndDrawRoute();
   }
 
   Future<void> loadDataAsync() async {
-    var config = await Configuration.getConfig();
-    var url = config['apiEndpoint'].toString();
-    var apiKey = config['apiKey'];
-    var did = context.read<Appdata>().didInTableDelivery.did;
+    try {
+      var config = await Configuration.getConfig();
+      var url = config['apiEndpoint'].toString();
+      var apiKey = config['apiKey'];
+      var did = context.read<Appdata>().didInTableDelivery.did;
 
-    // เรียกข้อมูลจาก API
-    var response = await http.get(Uri.parse('$url/delivery/$did'));
-    listResultsResponeDeliveryByDid =
-        deliveryByDidGetResponseFromJson(response.body);
+      await _getCurrentLocation(); // Get current location in real-time
 
-    // แยกพิกัดจากข้อมูล sender
-    List<String> latLngSender =
-        listResultsResponeDeliveryByDid.senderGps.split(',');
-    List<String> latLngReceiver =
-        listResultsResponeDeliveryByDid.receiverGps.split(',');
+      // Fetch delivery details from your API
+      var response = await http.get(Uri.parse('$url/delivery/$did'));
 
-    // แปลงค่าของ sender
-    double senderLatitude = double.parse(latLngSender[0].trim());
-    double senderLongitude = double.parse(latLngSender[1].trim());
-    LatLng senderLocation = LatLng(senderLatitude, senderLongitude);
-    log("Sender - latitude: $senderLatitude, longitude: $senderLongitude");
+      if (response.statusCode == 200) {
+        listResultsResponeDeliveryByDid =
+            deliveryByDidGetResponseFromJson(response.body);
 
-    // แปลงค่าของ receiver
-    double receiverLatitude = double.parse(latLngReceiver[0].trim());
-    double receiverLongitude = double.parse(latLngReceiver[1].trim());
-    LatLng receiverLocation = LatLng(receiverLatitude, receiverLongitude);
-    log("Receiver - latitude: $receiverLatitude, longitude: $receiverLongitude");
+        // Parse GPS coordinates of the sender and receiver
+        if (listResultsResponeDeliveryByDid.senderGps != null &&
+            listResultsResponeDeliveryByDid.receiverGps != null) {
+          List<String> latLngSender =
+              listResultsResponeDeliveryByDid.senderGps.split(',');
+          List<String> latLngReceiver =
+              listResultsResponeDeliveryByDid.receiverGps.split(',');
 
-    // กำหนดพิกัดปลายทาง
-    Riderlocation = LatLng(senderLatitude, senderLongitude);
-    Itemlocation = LatLng(receiverLatitude, receiverLongitude);
-    setState(() {});
+          double senderLatitude = double.parse(latLngSender[0].trim());
+          double senderLongitude = double.parse(latLngSender[1].trim());
+          Senderlocation = LatLng(senderLatitude, senderLongitude);
+
+          double receiverLatitude = double.parse(latLngReceiver[0].trim());
+          double receiverLongitude = double.parse(latLngReceiver[1].trim());
+          Receiverlocation = LatLng(receiverLatitude, receiverLongitude);
+
+          Riderlocation = LatLng(
+              currentRiderLocation.latitude, currentRiderLocation.longitude);
+
+          // Call the direction method to draw the route
+
+          _addMarkerAndDrawRoute();
+        }
+      } else {
+        throw Exception('Failed to fetch delivery data');
+      }
+    } catch (e) {
+      log("Error loading data: $e");
+    }
+  }
+
+  Future<void> _getCurrentLocation() async {
+    try {
+      // Ensure permission is granted
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          throw Exception('Location permissions are denied');
+        }
+      }
+
+      positionStream = Geolocator.getPositionStream(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          distanceFilter: 10,
+        ),
+      ).listen((Position position) {
+        currentRiderLocation = LatLng(position.latitude, position.longitude);
+        updatelocation(currentRiderLocation);
+        log("Current Location - latitude: ${currentRiderLocation.latitude}, longitude: ${currentRiderLocation.longitude}");
+      });
+    } catch (e) {
+      log("Error getting current location: $e");
+    }
+  }
+
+  void stopLocationUpdates() {
+    // Stop listening to location updates when not needed
+    positionStream?.cancel();
+  }
+
+  void _addMarkerAndDrawRoute() async {
+    // ลบมาร์กเกอร์ที่มีอยู่ก่อนหน้านี้
+    _markers.clear();
+
+    // แสดงมาร์กเกอร์สำหรับ Rider
+    _markers.add(
+      Marker(
+        markerId: const MarkerId('start'),
+        position: Riderlocation!,
+        infoWindow: const InfoWindow(
+          title: 'Rider',
+          snippet: 'รายละเอียดเกี่ยวกับจุดเริ่มต้น',
+        ),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+      ),
+    );
+
+    // แสดงมาร์กเกอร์สำหรับ Sender หรือ Receiver ตามสถานะ
+    if (displayRiderSender) {
+      _markers.add(
+        Marker(
+          markerId: const MarkerId('sender'),
+          position: Senderlocation!,
+          infoWindow: const InfoWindow(
+            title: 'Sender',
+            snippet: 'รายละเอียดเกี่ยวกับปลายทาง',
+          ),
+          icon:
+              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+        ),
+      );
+    }
+
+    if (displayRiderReceiver) {
+      _markers.add(
+        Marker(
+          markerId: const MarkerId('receiver'),
+          position: Receiverlocation!,
+          infoWindow: const InfoWindow(
+            title: 'Receiver',
+            snippet: 'รายละเอียดเกี่ยวกับปลายทาง',
+          ),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        ),
+      );
+    }
+
+    setState(() {
+      // อัปเดตแผนที่เมื่อเพิ่มมาร์กเกอร์
+    });
+  }
+
+  Future<void> updatelocation(LatLng currentRiderLocation) async {
+    final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+    var db = FirebaseFirestore.instance;
+    var data = {
+      'gpsRider':
+          '${currentRiderLocation.latitude},${currentRiderLocation.longitude}',
+      'did': context.read<Appdata>().didInTableDelivery.did,
+      'status': 'ไรเดอร์รับออเดอร์แล้ว'
+    };
+
+    db
+        .collection('rider')
+        .doc('test${context.read<Appdata>().didInTableDelivery.did}')
+        .set(data);
   }
 }

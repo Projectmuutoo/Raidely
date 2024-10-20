@@ -233,153 +233,156 @@ class _HomeMemberPageState extends State<HomeMemberPage> {
                                 horizontal: width * 0.02,
                               ),
                               child: Column(
-                                children:
-                                    listResultsResponeMember.map((member) {
-                                  return Column(
-                                    children: [
-                                      Container(
-                                        width: width,
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xffFEF7E7),
-                                          border: Border.all(
-                                            color: Colors.black,
-                                            width: 1,
+                                children: listResultsResponeMember.map(
+                                  (member) {
+                                    return Column(
+                                      children: [
+                                        Container(
+                                          width: width,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xffFEF7E7),
+                                            border: Border.all(
+                                              color: Colors.black,
+                                              width: 1,
+                                            ),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
                                           ),
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        child: Padding(
-                                          padding: EdgeInsets.symmetric(
-                                            vertical: height * 0.005,
-                                            horizontal: width * 0.01,
-                                          ),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Row(
-                                                children: [
-                                                  Column(
-                                                    children: [
-                                                      Stack(
+                                          child: Padding(
+                                            padding: EdgeInsets.symmetric(
+                                              vertical: height * 0.005,
+                                              horizontal: width * 0.01,
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    Column(
+                                                      children: [
+                                                        Stack(
+                                                          children: [
+                                                            Container(
+                                                              height:
+                                                                  height * 0.05,
+                                                              width:
+                                                                  height * 0.05,
+                                                              decoration:
+                                                                  const BoxDecoration(
+                                                                color: Color(
+                                                                    0xffE8DDC4),
+                                                                shape: BoxShape
+                                                                    .circle,
+                                                              ),
+                                                            ),
+                                                            Positioned(
+                                                              bottom: 0,
+                                                              left: 0,
+                                                              right: 0,
+                                                              child: ClipOval(
+                                                                child: member
+                                                                            .imageMember ==
+                                                                        '-'
+                                                                    ? SvgPicture
+                                                                        .string(
+                                                                        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 2a5 5 0 1 0 5 5 5 5 0 0 0-5-5zm0 8a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm9 11v-1a7 7 0 0 0-7-7h-4a7 7 0 0 0-7 7v1h2v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1z"></path></svg>',
+                                                                        height: height *
+                                                                            0.04,
+                                                                        color: Colors
+                                                                            .grey,
+                                                                      )
+                                                                    : Image
+                                                                        .network(
+                                                                        member
+                                                                            .imageMember,
+                                                                        width: height *
+                                                                            0.04,
+                                                                        fit: BoxFit
+                                                                            .cover,
+                                                                      ),
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    Padding(
+                                                      padding: EdgeInsets.only(
+                                                        left: width * 0.02,
+                                                      ),
+                                                      child: Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
                                                         children: [
-                                                          Container(
-                                                            height:
-                                                                height * 0.05,
-                                                            width:
-                                                                height * 0.05,
-                                                            decoration:
-                                                                const BoxDecoration(
-                                                              color: Color(
-                                                                  0xffE8DDC4),
-                                                              shape: BoxShape
-                                                                  .circle,
+                                                          Text(
+                                                            member.phone,
+                                                            style: TextStyle(
+                                                              fontSize: Get
+                                                                  .textTheme
+                                                                  .titleLarge!
+                                                                  .fontSize,
+                                                              color: const Color(
+                                                                  0xff51281D),
                                                             ),
                                                           ),
-                                                          Positioned(
-                                                            bottom: 0,
-                                                            left: 0,
-                                                            right: 0,
-                                                            child: ClipOval(
-                                                              child: member
-                                                                          .imageMember ==
-                                                                      '-'
-                                                                  ? SvgPicture
-                                                                      .string(
-                                                                      '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 2a5 5 0 1 0 5 5 5 5 0 0 0-5-5zm0 8a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm9 11v-1a7 7 0 0 0-7-7h-4a7 7 0 0 0-7 7v1h2v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1z"></path></svg>',
-                                                                      height:
-                                                                          height *
-                                                                              0.04,
-                                                                      color: Colors
-                                                                          .grey,
-                                                                    )
-                                                                  : Image
-                                                                      .network(
-                                                                      member
-                                                                          .imageMember,
-                                                                      width: height *
-                                                                          0.04,
-                                                                      fit: BoxFit
-                                                                          .cover,
-                                                                    ),
+                                                          Text(
+                                                            member.name,
+                                                            style: TextStyle(
+                                                              fontSize: Get
+                                                                  .textTheme
+                                                                  .titleMedium!
+                                                                  .fontSize,
+                                                              color: const Color(
+                                                                  0xff51281D),
                                                             ),
                                                           ),
                                                         ],
                                                       ),
-                                                    ],
-                                                  ),
-                                                  Padding(
-                                                    padding: EdgeInsets.only(
-                                                      left: width * 0.02,
                                                     ),
-                                                    child: Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        Text(
-                                                          member.phone,
-                                                          style: TextStyle(
-                                                            fontSize: Get
-                                                                .textTheme
-                                                                .titleLarge!
-                                                                .fontSize,
-                                                            color: const Color(
-                                                                0xff51281D),
-                                                          ),
-                                                        ),
-                                                        Text(
-                                                          member.name,
-                                                          style: TextStyle(
-                                                            fontSize: Get
-                                                                .textTheme
-                                                                .titleMedium!
-                                                                .fontSize,
-                                                            color: const Color(
-                                                                0xff51281D),
-                                                          ),
-                                                        ),
-                                                      ],
+                                                  ],
+                                                ),
+                                                ElevatedButton(
+                                                  onPressed: () {
+                                                    selectMember(member.phone);
+                                                  },
+                                                  style:
+                                                      ElevatedButton.styleFrom(
+                                                    fixedSize: Size(
+                                                      width * 0.2,
+                                                      height * 0.06,
+                                                    ),
+                                                    backgroundColor:
+                                                        const Color(0xffAF4C31),
+                                                    elevation: 1,
+                                                    shadowColor: Colors.black,
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              12),
                                                     ),
                                                   ),
-                                                ],
-                                              ),
-                                              ElevatedButton(
-                                                onPressed: () {
-                                                  selectMember(member.phone);
-                                                },
-                                                style: ElevatedButton.styleFrom(
-                                                  fixedSize: Size(
-                                                    width * 0.2,
-                                                    height * 0.06,
-                                                  ),
-                                                  backgroundColor:
-                                                      const Color(0xffAF4C31),
-                                                  elevation: 1,
-                                                  shadowColor: Colors.black,
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            12),
+                                                  child: Text(
+                                                    "เลือก",
+                                                    style: TextStyle(
+                                                      fontSize: Get.textTheme
+                                                          .labelLarge!.fontSize,
+                                                      color: Colors.white,
+                                                    ),
                                                   ),
                                                 ),
-                                                child: Text(
-                                                  "เลือก",
-                                                  style: TextStyle(
-                                                    fontSize: Get.textTheme
-                                                        .labelLarge!.fontSize,
-                                                    color: Colors.white,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
+                                              ],
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                      SizedBox(height: height * 0.01),
-                                    ],
-                                  );
-                                }).toList(),
+                                        SizedBox(height: height * 0.01),
+                                      ],
+                                    );
+                                  },
+                                ).toList(),
                               ),
                             ),
                     ),

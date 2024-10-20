@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
@@ -123,22 +124,296 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
             );
           }
           return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
+            child: Stack(
+              alignment: Alignment.bottomCenter,
               children: [
-                Expanded(
+                // Google Map เต็มจอ
+                Positioned.fill(
                   child: GoogleMap(
                     onMapCreated: (GoogleMapController controller) {
                       mapController = controller;
                       _addMarkerAndDrawRoute();
                     },
                     initialCameraPosition: CameraPosition(
-                      target: itemlocation!,
+                      target: senderlocation!,
                       zoom: 14.0,
                     ),
                     markers: _markers,
                     polylines: {_polyline},
                   ),
+                ),
+                // รายละเอียดการจัดส่งที่สามารถเลื่อนดูได้
+                DraggableScrollableSheet(
+                  initialChildSize: 0.3, // ขนาดเริ่มต้นที่แสดง
+                  minChildSize: 0.3, // ขนาดต่ำสุด
+                  maxChildSize: 1.0, // ขนาดสูงสุด
+                  builder: (BuildContext context,
+                      ScrollController scrollController) {
+                    return Padding(
+                      padding: EdgeInsets.symmetric(horizontal: width * 0.02),
+                      child: Container(
+                        color: Colors.transparent,
+                        child: SingleChildScrollView(
+                          controller: scrollController,
+                          child: Column(
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: width * 0.02,
+                                    vertical: height * 0.01,
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Text(
+                                            'สถานะการจัดส่ง',
+                                            style: TextStyle(
+                                              fontSize: Get.textTheme
+                                                  .headlineSmall!.fontSize,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Column(
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Column(
+                                                    children: [
+                                                      SvgPicture.string(
+                                                        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M5 12c0 3.859 3.14 7 7 7 3.859 0 7-3.141 7-7s-3.141-7-7-7c-3.86 0-7 3.141-7 7zm12 0c0 2.757-2.243 5-5 5s-5-2.243-5-5 2.243-5 5-5 5 2.243 5 5z"></path></svg>',
+                                                        width: width * 0.03,
+                                                        height: height * 0.03,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Container(
+                                                    width: width * 0.28,
+                                                    height: height * 0.002,
+                                                    color: Colors.black,
+                                                  ),
+                                                  Column(
+                                                    children: [
+                                                      SvgPicture.string(
+                                                        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 5c-3.859 0-7 3.141-7 7s3.141 7 7 7 7-3.141 7-7-3.141-7-7-7zm0 12c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z"></path><path d="M12 9c-1.627 0-3 1.373-3 3s1.373 3 3 3 3-1.373 3-3-1.373-3-3-3z"></path></svg>',
+                                                        width: width * 0.03,
+                                                        height: height * 0.03,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Container(
+                                                    width: width * 0.28,
+                                                    height: height * 0.002,
+                                                    color: Colors.black,
+                                                  ),
+                                                  Column(
+                                                    children: [
+                                                      SvgPicture.string(
+                                                        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M5 12c0 3.859 3.14 7 7 7 3.859 0 7-3.141 7-7s-3.141-7-7-7c-3.86 0-7 3.141-7 7zm12 0c0 2.757-2.243 5-5 5s-5-2.243-5-5 2.243-5 5-5 5 2.243 5 5z"></path></svg>',
+                                                        width: width * 0.03,
+                                                        height: height * 0.03,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Column(
+                                            children: [
+                                              Text(
+                                                'รอไรเดอร์มารับสินค้า',
+                                                style: TextStyle(
+                                                  fontSize: Get.textTheme
+                                                      .labelMedium!.fontSize,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          Column(
+                                            children: [
+                                              Text(
+                                                'อยู่ระหว่างการจัดส่ง',
+                                                style: TextStyle(
+                                                  fontSize: Get.textTheme
+                                                      .labelMedium!.fontSize,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          Column(
+                                            children: [
+                                              Text(
+                                                'ไรเดอร์นำส่งสินค้าแล้ว',
+                                                style: TextStyle(
+                                                  fontSize: Get.textTheme
+                                                      .labelMedium!.fontSize,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                      SizedBox(height: height * 0.01),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: height * 0.01),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: width * 0.02,
+                                    vertical: height * 0.01,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Column(
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Text(
+                                                'รายละเอียดการจัดส่ง',
+                                                style: TextStyle(
+                                                  fontSize: Get.textTheme
+                                                      .headlineSmall!.fontSize,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                      SizedBox(height: height * 0.01),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Column(
+                                                children: [
+                                                  Column(
+                                                    children: [
+                                                      SvgPicture.string(
+                                                        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M5 12c0 3.859 3.14 7 7 7 3.859 0 7-3.141 7-7s-3.141-7-7-7c-3.86 0-7 3.141-7 7zm12 0c0 2.757-2.243 5-5 5s-5-2.243-5-5 2.243-5 5-5 5 2.243 5 5z"></path></svg>',
+                                                        width: width * 0.03,
+                                                        height: height * 0.03,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Container(
+                                                    width: width * 0.002,
+                                                    height: height * 0.05,
+                                                    color: Colors.black,
+                                                  ),
+                                                  Column(
+                                                    children: [
+                                                      SvgPicture.string(
+                                                        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 5c-3.859 0-7 3.141-7 7s3.141 7 7 7 7-3.141 7-7-3.141-7-7-7zm0 12c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z"></path><path d="M12 9c-1.627 0-3 1.373-3 3s1.373 3 3 3 3-1.373 3-3-1.373-3-3-3z"></path></svg>',
+                                                        width: width * 0.03,
+                                                        height: height * 0.03,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Container(
+                                                    width: width * 0.002,
+                                                    height: height * 0.05,
+                                                    color: Colors.black,
+                                                  ),
+                                                  Column(
+                                                    children: [
+                                                      SvgPicture.string(
+                                                        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M5 12c0 3.859 3.14 7 7 7 3.859 0 7-3.141 7-7s-3.141-7-7-7c-3.86 0-7 3.141-7 7zm12 0c0 2.757-2.243 5-5 5s-5-2.243-5-5 2.243-5 5-5 5 2.243 5 5z"></path></svg>',
+                                                        width: width * 0.03,
+                                                        height: height * 0.03,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                              Column(
+                                                children: [
+                                                  Row(
+                                                    children: [
+                                                      Text(
+                                                        'รายละเอียดการจัดส่ง 1',
+                                                        style: TextStyle(
+                                                          fontSize: Get
+                                                              .textTheme
+                                                              .titleMedium!
+                                                              .fontSize,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  SizedBox(
+                                                      height: height * 0.06),
+                                                  Row(
+                                                    children: [
+                                                      Text(
+                                                        'รายละเอียดการจัดส่ง 2',
+                                                        style: TextStyle(
+                                                          fontSize: Get
+                                                              .textTheme
+                                                              .titleMedium!
+                                                              .fontSize,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  SizedBox(
+                                                      height: height * 0.06),
+                                                  Row(
+                                                    children: [
+                                                      Text(
+                                                        'รายละเอียดการจัดส่ง 3',
+                                                        style: TextStyle(
+                                                          fontSize: Get
+                                                              .textTheme
+                                                              .titleMedium!
+                                                              .fontSize,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),

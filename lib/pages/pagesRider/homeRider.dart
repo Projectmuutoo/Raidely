@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
@@ -9,6 +10,7 @@ import 'package:get/get.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:raidely/config/config.dart';
+import 'package:raidely/models/request/insertRiderassignmentPost.dart';
 import 'package:raidely/models/response/byPhoneRiderGetResponse.dart';
 import 'package:http/http.dart' as http;
 import 'package:raidely/models/response/deliveryAllGetResponse.dart';
@@ -41,6 +43,7 @@ class _HomeriderPageState extends State<HomeriderPage> {
     var responseRider = await http.get(Uri.parse('$url/rider/$phone'));
     resultsResponseRiderBody =
         byPhoneRiderGetResponseFromJson(responseRider.body);
+
     listOrderRiderShow();
   }
 
@@ -297,14 +300,33 @@ class _HomeriderPageState extends State<HomeriderPage> {
   }
 
   getOrder(int value) async {
+    var config = await Configuration.getConfig();
+    var url = config['apiEndpoint'].toString();
     final permission = await Geolocator.requestPermission();
+    var riderId = resultsResponseRiderBody[0].rid;
+    var did = context.read<Appdata>().didInTableDelivery.did;
+
     if (permission == LocationPermission.denied ||
         permission == LocationPermission.deniedForever) {
       // print('Location permissions are denied');
       return;
     }
+
+    var responseCheckorders = await http.get(
+      Uri.parse("$url/delivery/check-order/$value"),
+      headers: {"Content-Type": "application/json"},
+    );
+
+    if (responseCheckorders.statusCode == 404) {
+      // No pending orders found
+      log('No pending orders found for delivery ID: $value');
+      log('Response body: ${responseCheckorders.body}'); // Log the response body
+      return; // Stop execution if no orders are found
+    }
+
     final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
+
     var db = FirebaseFirestore.instance;
     var data = {
       'gpsRider': '${position.latitude},${position.longitude}',
@@ -313,13 +335,48 @@ class _HomeriderPageState extends State<HomeriderPage> {
     };
 
     db.collection('rider').doc('test$value').set(data);
+
     KeepDidInTableDelivery keep = KeepDidInTableDelivery();
     keep.clickGetorder = true;
     keep.did = value.toString();
     context.read<Appdata>().didInTableDelivery = keep;
 
-    // Pass the value to GetorderPage
-    Get.to(() => const GetorderPage()); // Updated this line
+    // Ensure the resultsResponseRiderBody list has at least one element
+    if (resultsResponseRiderBody.isEmpty) {
+      log("No rider data available");
+      return;
+    }
+
+    var jsonriderass = {
+      'delivery_id': value,
+      'rider_id': riderId,
+      'status': "ไรเดอร์เข้ารับสินค้าแล้ว",
+      'image_receiver': '-',
+      'image_success': '-'
+    };
+
+    // No need to encode it again using insertRiderAssignmentFromJson
+    var jsonencode = jsonEncode(jsonriderass);
+
+    var responsePostJsonRiderass = await http.post(
+      Uri.parse("$url/rider_assigns/insert"),
+      headers: {"Content-Type": "application/json; charset=utf-8"},
+      body: jsonencode, // Use the encoded JSON string directly
+    );
+
+    if (responsePostJsonRiderass.statusCode == 200) {
+      var json = {"status": "ไรเดอร์เข้ารับสินค้าแล้ว"};
+      var responsePutJsonUpdateMember = await http.put(
+        Uri.parse("$url/delivery/update/$value"),
+        headers: {"Content-Type": "application/json; charset=utf-8"},
+        body: jsonEncode(json),
+      );
+      // Pass the value to GetorderPage
+      log('เข้าอันนี้ละ1');
+      Get.to(() => const GetorderPage()); // Updated this line
+    } else {
+      log("can't receive order");
+    }
   }
 
   void getOrderDetails(int value) {

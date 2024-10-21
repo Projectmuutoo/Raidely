@@ -227,7 +227,7 @@ class _HomeriderPageState extends State<HomeriderPage> {
                                       children: [
                                         ElevatedButton(
                                           onPressed: () {
-                                            getOrder(value.did);
+                                            getOrder(value.did, value.itemName);
                                           },
                                           style: ElevatedButton.styleFrom(
                                             fixedSize: Size(
@@ -299,12 +299,11 @@ class _HomeriderPageState extends State<HomeriderPage> {
     );
   }
 
-  getOrder(int value) async {
+  getOrder(int value, String itemName) async {
     var db = FirebaseFirestore.instance;
     var config = await Configuration.getConfig();
     var url = config['apiEndpoint'].toString();
     final permission = await Geolocator.requestPermission();
-    var riderId = resultsResponseRiderBody[0].rid;
     // var did = context.read<Appdata>().didInTableDelivery.did;
 
     if (permission == LocationPermission.denied ||
@@ -312,119 +311,198 @@ class _HomeriderPageState extends State<HomeriderPage> {
       // print('Location permissions are denied');
       return;
     }
+    // แสดง Popup ก่อนที่จะส่งค่าไปทำงานต่อ
+    bool confirm = await Get.defaultDialog(
+      title: "",
+      titlePadding: EdgeInsets.zero,
+      content: Column(
+        children: [
+          Image.asset(
+            'assets/images/question.png',
+            width: MediaQuery.of(context).size.width * 0.16,
+            height: MediaQuery.of(context).size.width * 0.16,
+            fit: BoxFit.cover,
+          ),
+          SizedBox(height: MediaQuery.of(context).size.width * 0.03),
+          Text(
+            'คุณแน่ใจว่าต้องการรับสินค้านี้?',
+            style: TextStyle(
+              fontSize: Get.textTheme.titleLarge!.fontSize,
+            ),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+      actions: [
+        ElevatedButton(
+          onPressed: () async {
+            var result = await db
+                .collection('detailsShippingList')
+                .doc('order$itemName')
+                .get();
+            var datas = result.data();
 
-    var responseCheckorders = await http.get(
-      Uri.parse("$url/delivery/check-order/$value"),
-      headers: {"Content-Type": "application/json"},
+            if (datas!['status'] == 'ไรเดอร์รับของแล้ว') {
+              Get.defaultDialog(
+                  title: "",
+                  titlePadding: EdgeInsets.zero,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: MediaQuery.of(context).size.width * 0.02,
+                    vertical: MediaQuery.of(context).size.height * 0.02,
+                  ),
+                  content: Column(
+                    children: [
+                      Image.asset(
+                        'assets/images/warning.png',
+                        width: MediaQuery.of(context).size.width * 0.16,
+                        height: MediaQuery.of(context).size.width * 0.16,
+                        fit: BoxFit.cover,
+                      ),
+                      SizedBox(
+                          height: MediaQuery.of(context).size.width * 0.03),
+                      Text(
+                        'มีไรเดอร์รับสินค้านี้แล้ว!',
+                        style: TextStyle(
+                          fontSize: Get.textTheme.titleLarge!.fontSize,
+                          color: const Color(0xffaf4c31),
+                        ),
+                      ),
+                    ],
+                  ),
+                  barrierDismissible: false,
+                  actions: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Get.back(result: false);
+                        Get.back(result: false);
+                        loadDataAsync();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        fixedSize: Size(
+                          MediaQuery.of(context).size.width * 0.3,
+                          MediaQuery.of(context).size.height * 0.05,
+                        ),
+                        backgroundColor: const Color(0xffFEF7E7),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                      ),
+                      child: Text(
+                        'ยืนยัน',
+                        style: TextStyle(
+                          fontSize: Get.textTheme.titleSmall!.fontSize,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                  ]);
+              return;
+            }
+
+            var data = {
+              'status': 'ไรเดอร์รับของแล้ว',
+              'sender_Gps': datas['sender_Gps'],
+              'receiver_Gps': datas['receiver_Gps'],
+            };
+            db
+                .collection('detailsShippingList')
+                .doc('order$itemName')
+                .set(data);
+
+            Get.back(result: true);
+          },
+          style: ElevatedButton.styleFrom(
+            fixedSize: Size(
+              MediaQuery.of(context).size.width * 0.3,
+              MediaQuery.of(context).size.height * 0.05,
+            ),
+            backgroundColor: const Color(0xffD5843D),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+          ),
+          child: Text(
+            'ยืนยัน',
+            style: TextStyle(
+              fontSize: Get.textTheme.titleSmall!.fontSize,
+              color: Colors.black,
+            ),
+          ),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            Get.back(result: false);
+          },
+          style: ElevatedButton.styleFrom(
+            fixedSize: Size(
+              MediaQuery.of(context).size.width * 0.3,
+              MediaQuery.of(context).size.height * 0.05,
+            ),
+            backgroundColor: const Color(0xffFEF7E7),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+          ),
+          child: Text(
+            'ยกเลิก',
+            style: TextStyle(
+              fontSize: Get.textTheme.titleSmall!.fontSize,
+              color: Colors.black,
+            ),
+          ),
+        ),
+      ],
     );
 
-    if (responseCheckorders.statusCode == 404) {
-      // No pending orders found
-      log('No pending orders found for delivery ID: $value');
-      log('Response body: ${responseCheckorders.body}'); // Log the response body
-      return; // Stop execution if no orders are found
-    } else {
-      // แสดง Popup ก่อนที่จะส่งค่าไปทำงานต่อ
-      bool confirm = await showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('ยืนยันคำสั่ง'),
-            content:
-                Text('คุณแน่ใจว่าต้องการเข้ารับสินค้าหมายเลข $value หรือไม่?'),
-            actions: [
-              TextButton(
-                child: const Text('ยกเลิก'),
-                onPressed: () {
-                  Navigator.of(context).pop(false); // ส่งค่ากลับว่าไม่ยืนยัน
-                },
-              ),
-              TextButton(
-                child: const Text('ยืนยัน'),
-                onPressed: () async {
-                  var result = await db
-                      .collection('detailsShippingList')
-                      .doc('order${listResultsResponeDeliveryAll[0].itemName}')
-                      .get();
-                  var datas = result.data();
+    // หากผู้ใช้ยืนยัน ก็ทำการส่งค่าต่อไป
+    if (confirm) {
+      final position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
 
-                  if (datas!['status'] == 'ไรเดอร์รับของแล้ว') {
-                    log('ไรเดอร์รับของแล้ว');
-                    return;
-                  }
+      var data = {
+        'gpsRider': '${position.latitude},${position.longitude}',
+        'did': value,
+        'status': 'ไรเดอร์เข้ารับสินค้าแล้ว'
+      };
+      db.collection('riderGetOrder').doc('order$value').set(data);
 
-                  var data = {
-                    'status': 'ไรเดอร์รับของแล้ว',
-                  };
-                  db
-                      .collection('detailsShippingList')
-                      .doc('order${listResultsResponeDeliveryAll[0].itemName}')
-                      .set(data);
+      KeepDidInTableDelivery keep = KeepDidInTableDelivery();
+      keep.clickGetorder = true;
+      keep.did = value.toString();
+      context.read<Appdata>().didInTableDelivery = keep;
 
-                  Navigator.of(context).pop(true); // ส่งค่ากลับว่ายืนยัน
-                },
-              ),
-            ],
-          );
-        },
+      var jsonriderass = {
+        'delivery_id': value,
+        'rider_id': resultsResponseRiderBody[0].rid,
+        'status': "ไรเดอร์เข้ารับสินค้าแล้ว",
+        'image_receiver': '-',
+        'image_success': '-'
+      };
+      var responsePostJsonRiderass = await http.post(
+        Uri.parse("$url/rider_assigns/insert"),
+        headers: {"Content-Type": "application/json; charset=utf-8"},
+        body: jsonEncode(jsonriderass), // Use the encoded JSON string directly
       );
 
-      // หากผู้ใช้ยืนยัน ก็ทำการส่งค่าต่อไป
-      if (confirm) {
-        final position = await Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.high);
-
-        var data = {
-          'gpsRider': '${position.latitude},${position.longitude}',
-          'did': value,
-          'status': 'ไรเดอร์เข้ารับสินค้าแล้ว'
+      if (responsePostJsonRiderass.statusCode == 200) {
+        var json = {
+          "status": "ไรเดอร์เข้ารับสินค้าแล้ว",
         };
-
-        db.collection('rider').doc('order$value').set(data);
-
-        KeepDidInTableDelivery keep = KeepDidInTableDelivery();
-        keep.clickGetorder = true;
-        keep.did = value.toString();
-        context.read<Appdata>().didInTableDelivery = keep;
-
-        if (resultsResponseRiderBody.isEmpty) {
-          log("No rider data available");
-          return;
-        }
-
-        var jsonriderass = {
-          'delivery_id': value,
-          'rider_id': riderId,
-          'status': "ไรเดอร์เข้ารับสินค้าแล้ว",
-          'image_receiver': '-',
-          'image_success': '-'
-        };
-
-        var jsonencode = jsonEncode(jsonriderass);
-
-        var responsePostJsonRiderass = await http.post(
-          Uri.parse("$url/rider_assigns/insert"),
+        var responsePutJsonUpdateMember = await http.put(
+          Uri.parse("$url/delivery/update/$value"),
           headers: {"Content-Type": "application/json; charset=utf-8"},
-          body: jsonencode, // Use the encoded JSON string directly
+          body: jsonEncode(json),
         );
 
-        if (responsePostJsonRiderass.statusCode == 200) {
-          var json = {"status": "ไรเดอร์เข้ารับสินค้าแล้ว"};
-          var responsePutJsonUpdateMember = await http.put(
-            Uri.parse("$url/delivery/update/$value"),
-            headers: {"Content-Type": "application/json; charset=utf-8"},
-            body: jsonEncode(json),
-          );
-          log('เข้าอันนี้ละ1');
+        if (responsePutJsonUpdateMember.statusCode == 200) {
           Get.to(() => const GetorderPage());
-        } else {
-          log("can't receive order");
         }
       }
     }
   }
 
-  void getOrderDetails(int value) {
+  void getOrderDetails(int value) async {
+    var db = FirebaseFirestore.instance;
     // สร้าง KeepDidInTableDelivery ใหม่
     KeepDidInTableDelivery keep = KeepDidInTableDelivery();
     keep.did = value.toString();
@@ -436,6 +514,14 @@ class _HomeriderPageState extends State<HomeriderPage> {
       keep.clickGetorder = false;
       context.read<Appdata>().didInTableDelivery = keep;
     }
+
+    final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+    var data = {
+      'gpsRider': '${position.latitude},${position.longitude}',
+      'did': value,
+    };
+    db.collection('riderGetOrder').doc('order$value').set(data);
 
     // ส่งค่าที่ต้องการไปยัง GetorderPage
     Get.to(() => const GetorderPage()); // ส่งค่า value ไปยัง GetorderPage

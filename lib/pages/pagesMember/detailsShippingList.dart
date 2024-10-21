@@ -968,8 +968,7 @@ class _DetailsShippingListState extends State<DetailsShippingList> {
         password: combinedMembers[0].password, //password เดิม
         address: combinedMembers[0].address, //ที่อยู่เดิม
         //ถ้าหากมีการเปลี่ยนที่อยู่ใหม่ให้บันทึก gps ใหม่ลง
-        gps:
-            latlngCth.text.isNotEmpty ? latlngCth.text : combinedMembers[0].gps,
+        gps: combinedMembers[0].gps,
         imageMember: combinedMembers[0].imageMember, //รูปเดิม
       );
 
@@ -989,6 +988,12 @@ class _DetailsShippingListState extends State<DetailsShippingList> {
           var db = FirebaseFirestore.instance;
           var data = {
             'status': 'รอไรเดอร์รับของ',
+            'sender_Id': combinedMembers[0].mid,
+            'receiver_Id': combinedMembers[1].mid,
+            'sender_Gps': latlngCth.text.isNotEmpty
+                ? latlngCth.text
+                : combinedMembers[0].gps,
+            'receiver_Gps': combinedMembers[1].gps,
           };
           db
               .collection('detailsShippingList')

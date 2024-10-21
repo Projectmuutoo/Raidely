@@ -15,6 +15,7 @@ import 'package:provider/provider.dart';
 import 'package:raidely/config/config.dart';
 import 'package:raidely/models/response/byPhoneRiderGetResponse.dart';
 import 'package:raidely/models/response/deliveryByDidGetResponse.dart';
+import 'package:raidely/pages/pagesRider/homeRider.dart';
 import 'package:raidely/shared/appData.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -55,10 +56,10 @@ class _GetorderPageState extends State<GetorderPage> {
   @override
   void initState() {
     late PolylinePoints polylinePoints;
-    riderlocation = const LatLng(0.0, 0.0); // หรือค่าที่ต้องการ
-    itemlocation = const LatLng(0.0, 0.0); // หรือค่าที่ต้องการ
-    senderlocation = const LatLng(0.0, 0.0); // หรือค่าที่ต้องการ
-    receiverlocation = const LatLng(0.0, 0.0); // หรือค่าที่ต้องการ
+    // riderlocation = const LatLng(0.0, 0.0); // หรือค่าที่ต้องการ
+    // itemlocation = const LatLng(0.0, 0.0); // หรือค่าที่ต้องการ
+    // senderlocation = const LatLng(0.0, 0.0); // หรือค่าที่ต้องการ
+    // receiverlocation = const LatLng(0.0, 0.0); // หรือค่าที่ต้องการ
     loadData = loadDataAsync();
     var chick = context.read<Appdata>().didInTableDelivery.clickGetorder;
     if (chick) {
@@ -807,7 +808,6 @@ class _GetorderPageState extends State<GetorderPage> {
       'gpsRider':
           '${currentRiderLocation.latitude},${currentRiderLocation.longitude}',
       'did': context.read<Appdata>().didInTableDelivery.did,
-      'status': 'ไรเดอร์รับออเดอร์แล้ว'
     };
 
     db
@@ -872,8 +872,19 @@ class _GetorderPageState extends State<GetorderPage> {
       );
 
       if (responsePostJsonRiderass.statusCode == 200) {
-        // Pass the value to GetorderPage
         log('เข้าอันนี้ละ2');
+        final position = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.high);
+        var db = FirebaseFirestore.instance;
+        var data = {
+          'gpsRider': '${position.latitude},${position.longitude}',
+          'did': did,
+          'status': 'ไรเดอร์เข้ารับสินค้าแล้ว',
+          'image_receive': 'รูปภาพเข้ารับ',
+          'image_success': 'รูปภาพส่งเสร็จ',
+        };
+
+        db.collection('rider').doc('test$did').set(data);
       } else {
         log("can't receive order");
       }
@@ -899,6 +910,18 @@ class _GetorderPageState extends State<GetorderPage> {
         headers: {"Content-Type": "application/json; charset=utf-8"},
         body: jsonEncode(jsonriderass),
       );
+      final position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      var db = FirebaseFirestore.instance;
+      var data = {
+        'gpsRider': '${position.latitude},${position.longitude}',
+        'did': did,
+        'status': 'ไรเดอร์กำลังนำส่งสินค้า',
+        'image_receive': 'รูปภาพเข้ารับ',
+        'image_success': 'รูปภาพส่งเสร็จ',
+      };
+
+      db.collection('rider').doc('test$did').set(data);
     } else {
       log('เข้า else');
       // log("update ส่งสินค้าสำเร็จ");
@@ -921,6 +944,18 @@ class _GetorderPageState extends State<GetorderPage> {
         headers: {"Content-Type": "application/json; charset=utf-8"},
         body: jsonEncode(jsonriderass),
       );
+      final position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      var db = FirebaseFirestore.instance;
+      var data = {
+        'gpsRider': '${position.latitude},${position.longitude}',
+        'did': did,
+        'status': 'ส่งสินค้าสำเร็จ',
+        'image_receive': 'รูปภาพเข้ารับ',
+        'image_success': 'รูปภาพส่งเสร็จ',
+      };
+
+      db.collection('rider').doc('test$did').set(data);
 
       // แสดง Popup หลังจากอัปเดตข้อมูลสำเร็จ
       Get.dialog(
@@ -930,8 +965,9 @@ class _GetorderPageState extends State<GetorderPage> {
           actions: [
             TextButton(
               onPressed: () {
-                Get.back(); // ปิด Popup
-                Get.back(); // กลับไปหน้าจอหลัก
+                // Get.back(); // ปิด Popup
+                // Get.back(); // กลับไปหน้าจอหลัก
+                Get.to(() => const HomeriderPage());
               },
               child: const Text("ตกลง"),
             ),

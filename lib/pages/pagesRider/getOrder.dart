@@ -8,6 +8,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -52,6 +53,8 @@ class _GetorderPageState extends State<GetorderPage> {
   bool displayRiderReceiver = true;
   bool isDelivered = false; // สถานะของการส่งสินค้า
   late List<ByPhoneRiderGetResponse> resultsResponseRiderBody = [];
+  final box = GetStorage();
+  var db = FirebaseFirestore.instance;
 
   @override
   void initState() {
@@ -67,16 +70,37 @@ class _GetorderPageState extends State<GetorderPage> {
         .collection('riderGetOrder')
         .doc('order$did')
         .snapshots()
-        .listen((snapshot) {
+        .listen((snapshot) async {
       var data = snapshot.data();
       if (data != null) {
+        // Extract rider's location from gpsRider
         List<String> latLngSender = data['gpsRider'].split(',');
+// Update rider's location and map markers
         setState(() {
           riderlocation = LatLng(double.parse(latLngSender[0].trim()),
               double.parse(latLngSender[1].trim()));
           _addMarkerAndDrawRoute(); // Update map markers and routes
-          // _fetchRoute();
         });
+        // Listen to changes in the shipping details
+        var result = await db
+            .collection('detailsShippingList')
+            .doc('order${listResultsResponeDeliveryByDid.itemName}')
+            .get();
+
+        var datas = result.data();
+        if (datas != null) {
+          // Determine which GPS coordinates to use (sender or receiver)
+          List<String> latLng = displayRiderSender
+              ? datas['sender_Gps'].split(',')
+              : datas['receiver_Gps'].split(',');
+
+          double latitude = double.parse(latLng[0].trim());
+          double longitude = double.parse(latLng[1].trim());
+
+          // Fetch and update the route
+          _fetchRoute(latitude, longitude);
+          setState(() {});
+        }
       }
     });
 
@@ -121,10 +145,21 @@ class _GetorderPageState extends State<GetorderPage> {
         // Call getOrder only if clickGetOrder is true
         if (clickGetOrder) {
           getOrder(listResultsResponeDeliveryByDid.did, 0);
+          var result = await db
+              .collection('detailsShippingList')
+              .doc('order${listResultsResponeDeliveryByDid.itemName}')
+              .get();
+          var datas = result.data();
+          List<String> latLngSender = datas!['sender_Gps'].split(',');
+          double senderLatitude = double.parse(latLngSender[0].trim());
+          double senderLongitude = double.parse(latLngSender[1].trim());
+
+          _fetchRoute(senderLatitude, senderLongitude);
         }
 
         // Call the direction method to draw the route
         _addMarkerAndDrawRoute();
+
         setState(() {});
       } else {
         throw Exception(
@@ -894,7 +929,7 @@ class _GetorderPageState extends State<GetorderPage> {
     var db = FirebaseFirestore.instance;
     var config = await Configuration.getConfig();
     var url = config['apiEndpoint'].toString();
-    var downloadUrlReceive = '';
+
     //=================================
     //=================================
     //=================================
@@ -914,17 +949,6 @@ class _GetorderPageState extends State<GetorderPage> {
 
       _fetchRoute(senderLatitude, senderLongitude);
       setState(() {});
-      var responseCheckorders = await http.get(
-        Uri.parse("$url/delivery/check-order/$did"),
-        headers: {"Content-Type": "application/json"},
-      );
-
-      if (responseCheckorders.statusCode == 404) {
-        // No pending orders found
-        log('No pending orders found for delivery ID: $did');
-        log('Response body: ${responseCheckorders.body}'); // Log the response body
-        return; // Stop execution if no orders are found
-      }
 
       var json = {"status": "ไรเดอร์เข้ารับสินค้าแล้ว"};
       var responsePutJsonUpdateMember = await http.put(
@@ -941,17 +965,15 @@ class _GetorderPageState extends State<GetorderPage> {
       var jsonriderass = {
         'delivery_id': did,
         'rider_id': riderId,
-        'status': "ไรเดอร์เข้ารับสินค้าแล้ว",
+        'status': "ไรเดอร์รับออเดอร์แล้ว",
         'image_receiver': '-',
         'image_success': '-'
       };
 
-      var jsonencode = jsonEncode(jsonriderass);
-
       var responsePostJsonRiderass = await http.post(
         Uri.parse("$url/rider_assigns/insert"),
         headers: {"Content-Type": "application/json; charset=utf-8"},
-        body: jsonencode, // Use the encoded JSON string directly
+        body: jsonEncode(jsonriderass), // Use the encoded JSON string directly
       );
 
       if (responsePostJsonRiderass.statusCode == 200) {
@@ -961,12 +983,10 @@ class _GetorderPageState extends State<GetorderPage> {
         var data = {
           'gpsRider': '${position.latitude},${position.longitude}',
           'did': did,
-          'status': 'ไรเดอร์เข้ารับสินค้าแล้ว',
+          'status': 'ไรเดอร์รับออเดอร์แล้ว',
         };
 
         db.collection('riderGetOrder').doc('order$did').set(data);
-      } else {
-        log("can't receive order");
       }
     } else if (i == 1) {
       // //////////////////////////////////////////////////////////
@@ -985,7 +1005,7 @@ class _GetorderPageState extends State<GetorderPage> {
       double receiverLatitude = double.parse(latLngReceiver[0].trim());
       double receiverLongitude = double.parse(latLngReceiver[1].trim());
       _fetchRoute(receiverLatitude, receiverLongitude);
-      setState(() {});
+
       // สร้างอ้างอิงไปยัง Firebase Storage
       Reference storageReference = FirebaseStorage.instance.ref().child(
           'riderGetOrderUploadImage/${DateTime.now().millisecondsSinceEpoch}_${savedFile!.path.split('/').last}');
@@ -995,7 +1015,8 @@ class _GetorderPageState extends State<GetorderPage> {
       TaskSnapshot taskSnapshot = await uploadTask;
 
       // รับ URL ของรูปที่อัพโหลดสำเร็จ
-      downloadUrlReceive = await taskSnapshot.ref.getDownloadURL();
+      var downloadUrlReceive = await taskSnapshot.ref.getDownloadURL();
+      box.write('downloadUrlReceive', downloadUrlReceive);
       var jsondelivery = {
         "status": "ไรเดอร์กำลังนำส่งสินค้า",
         "rider_receive": downloadUrlReceive
@@ -1024,8 +1045,9 @@ class _GetorderPageState extends State<GetorderPage> {
         'image_receive': downloadUrlReceive,
         'image_success': '',
       };
-
       db.collection('riderGetOrder').doc('order$did').set(data);
+      savedFile = null;
+      setState(() {});
     } else {
       // ///////////////////////////////////////////////
       // ///////////////////////////////////////////////
@@ -1036,13 +1058,23 @@ class _GetorderPageState extends State<GetorderPage> {
       // ///////////////////////////////////////////////
       // ///////////////////////////////////////////////
       // ///////////////////////////////////////////////
+      // สร้างอ้างอิงไปยัง Firebase Storage
+      Reference storageReference = FirebaseStorage.instance.ref().child(
+          'riderGetOrderUploadImage/${DateTime.now().millisecondsSinceEpoch}_${savedFile!.path.split('/').last}');
+
+      // อัพโหลดไฟล์และรอจนกว่าจะเสร็จสิ้น
+      UploadTask uploadTask = storageReference.putFile(savedFile!);
+      TaskSnapshot taskSnapshot = await uploadTask;
+
+      // รับ URL ของรูปที่อัพโหลดสำเร็จ
+      var downloadUrlSuccess = await taskSnapshot.ref.getDownloadURL();
       var jsondelivery = {
         "status": "ส่งสินค้าสำเร็จ",
-        "rider_success": "ตัวแปรภาพ"
+        "rider_success": downloadUrlSuccess
       };
       var jsonriderass = {
         "status": "ส่งสินค้าสำเร็จ",
-        "image_success": "ตัวแปรภาพ"
+        "image_success": downloadUrlSuccess
       };
       var responsePutJsonUpdateMember = await http.put(
         Uri.parse("$url/delivery/update/$did"),
@@ -1056,34 +1088,69 @@ class _GetorderPageState extends State<GetorderPage> {
       );
       final position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high);
+
       var db = FirebaseFirestore.instance;
+
       var data = {
         'gpsRider': '${position.latitude},${position.longitude}',
         'did': did,
         'status': 'ส่งสินค้าสำเร็จ',
-        'image_receive': downloadUrlReceive,
-        'image_success': 'รูปภาพส่งเสร็จ555555555555',
+        'image_receive': box.read('downloadUrlReceive'),
+        'image_success': downloadUrlSuccess,
       };
-
       db.collection('riderGetOrder').doc('order$did').set(data);
-
+      box.remove('downloadUrlReceive');
       // แสดง Popup หลังจากอัปเดตข้อมูลสำเร็จ
-      Get.dialog(
-        AlertDialog(
-          title: const Text("สำเร็จ"),
-          content: const Text("ส่งข้อมูลสำเร็จ"),
+      Get.defaultDialog(
+          title: "",
+          titlePadding: EdgeInsets.zero,
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: MediaQuery.of(context).size.width * 0.02,
+            vertical: MediaQuery.of(context).size.height * 0.02,
+          ),
+          content: Column(
+            children: [
+              Image.asset(
+                'assets/images/success.png',
+                width: MediaQuery.of(context).size.width * 0.16,
+                height: MediaQuery.of(context).size.width * 0.16,
+                fit: BoxFit.cover,
+              ),
+              SizedBox(height: MediaQuery.of(context).size.width * 0.03),
+              Text(
+                'จัดส่งออเดอร์สำเร็จ!!',
+                style: TextStyle(
+                  fontSize: Get.textTheme.titleLarge!.fontSize,
+                  color: const Color(0xffaf4c31),
+                ),
+              ),
+            ],
+          ),
+          barrierDismissible: false,
           actions: [
-            TextButton(
+            ElevatedButton(
               onPressed: () {
-                // Get.back(); // ปิด Popup
-                // Get.back(); // กลับไปหน้าจอหลัก
                 Get.to(() => const HomeriderPage());
               },
-              child: const Text("ตกลง"),
+              style: ElevatedButton.styleFrom(
+                fixedSize: Size(
+                  MediaQuery.of(context).size.width * 0.3,
+                  MediaQuery.of(context).size.height * 0.05,
+                ),
+                backgroundColor: const Color(0xffFEF7E7),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+              ),
+              child: Text(
+                'ยืนยัน',
+                style: TextStyle(
+                  fontSize: Get.textTheme.titleSmall!.fontSize,
+                  color: Colors.black,
+                ),
+              ),
             ),
-          ],
-        ),
-      );
+          ]);
     }
   }
 

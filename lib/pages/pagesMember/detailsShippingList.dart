@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'dart:io';
 import 'dart:ui';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -72,6 +73,7 @@ class _DetailsShippingListState extends State<DetailsShippingList> {
 
     nameShippingCth.text = combinedMembers[0].name;
     addressCth.text = combinedMembers[0].address;
+
     setState(() {});
   }
 
@@ -984,6 +986,14 @@ class _DetailsShippingListState extends State<DetailsShippingList> {
 
       if (responsePostJsonDelivery.statusCode == 200) {
         if (responsePutJsonUpdateMember.statusCode == 200) {
+          var db = FirebaseFirestore.instance;
+          var data = {
+            'status': 'รอไรเดอร์รับของ',
+          };
+          db
+              .collection('detailsShippingList')
+              .doc('order${nameProductCth.text}')
+              .set(data);
           // back Loading Indicator
           Get.back();
           Get.defaultDialog(

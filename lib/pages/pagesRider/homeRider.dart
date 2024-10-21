@@ -300,11 +300,12 @@ class _HomeriderPageState extends State<HomeriderPage> {
   }
 
   getOrder(int value) async {
+    var db = FirebaseFirestore.instance;
     var config = await Configuration.getConfig();
     var url = config['apiEndpoint'].toString();
     final permission = await Geolocator.requestPermission();
     var riderId = resultsResponseRiderBody[0].rid;
-    var did = context.read<Appdata>().didInTableDelivery.did;
+    // var did = context.read<Appdata>().didInTableDelivery.did;
 
     if (permission == LocationPermission.denied ||
         permission == LocationPermission.deniedForever) {
@@ -322,60 +323,104 @@ class _HomeriderPageState extends State<HomeriderPage> {
       log('No pending orders found for delivery ID: $value');
       log('Response body: ${responseCheckorders.body}'); // Log the response body
       return; // Stop execution if no orders are found
-    }
-
-    final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-
-    var db = FirebaseFirestore.instance;
-    var data = {
-      'gpsRider': '${position.latitude},${position.longitude}',
-      'did': value,
-      'status': 'ไรเดอร์เข้ารับสินค้าแล้ว'
-    };
-
-    db.collection('rider').doc('test$value').set(data);
-
-    KeepDidInTableDelivery keep = KeepDidInTableDelivery();
-    keep.clickGetorder = true;
-    keep.did = value.toString();
-    context.read<Appdata>().didInTableDelivery = keep;
-
-    // Ensure the resultsResponseRiderBody list has at least one element
-    if (resultsResponseRiderBody.isEmpty) {
-      log("No rider data available");
-      return;
-    }
-
-    var jsonriderass = {
-      'delivery_id': value,
-      'rider_id': riderId,
-      'status': "ไรเดอร์เข้ารับสินค้าแล้ว",
-      'image_receiver': '-',
-      'image_success': '-'
-    };
-
-    // No need to encode it again using insertRiderAssignmentFromJson
-    var jsonencode = jsonEncode(jsonriderass);
-
-    var responsePostJsonRiderass = await http.post(
-      Uri.parse("$url/rider_assigns/insert"),
-      headers: {"Content-Type": "application/json; charset=utf-8"},
-      body: jsonencode, // Use the encoded JSON string directly
-    );
-
-    if (responsePostJsonRiderass.statusCode == 200) {
-      var json = {"status": "ไรเดอร์เข้ารับสินค้าแล้ว"};
-      var responsePutJsonUpdateMember = await http.put(
-        Uri.parse("$url/delivery/update/$value"),
-        headers: {"Content-Type": "application/json; charset=utf-8"},
-        body: jsonEncode(json),
-      );
-      // Pass the value to GetorderPage
-      log('เข้าอันนี้ละ1');
-      Get.to(() => const GetorderPage()); // Updated this line
     } else {
-      log("can't receive order");
+      // แสดง Popup ก่อนที่จะส่งค่าไปทำงานต่อ
+      bool confirm = await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('ยืนยันคำสั่ง'),
+            content:
+                Text('คุณแน่ใจว่าต้องการเข้ารับสินค้าหมายเลข $value หรือไม่?'),
+            actions: [
+              TextButton(
+                child: const Text('ยกเลิก'),
+                onPressed: () {
+                  Navigator.of(context).pop(false); // ส่งค่ากลับว่าไม่ยืนยัน
+                },
+              ),
+              TextButton(
+                child: const Text('ยืนยัน'),
+                onPressed: () async {
+                  var result = await db
+                      .collection('detailsShippingList')
+                      .doc('order${listResultsResponeDeliveryAll[0].itemName}')
+                      .get();
+                  var datas = result.data();
+
+                  if (datas!['status'] == 'ไรเดอร์รับของแล้ว') {
+                    log('ไรเดอร์รับของแล้ว');
+                    return;
+                  }
+
+                  var data = {
+                    'status': 'ไรเดอร์รับของแล้ว',
+                  };
+                  db
+                      .collection('detailsShippingList')
+                      .doc('order${listResultsResponeDeliveryAll[0].itemName}')
+                      .set(data);
+
+                  Navigator.of(context).pop(true); // ส่งค่ากลับว่ายืนยัน
+                },
+              ),
+            ],
+          );
+        },
+      );
+
+      // หากผู้ใช้ยืนยัน ก็ทำการส่งค่าต่อไป
+      if (confirm) {
+        final position = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.high);
+
+        var data = {
+          'gpsRider': '${position.latitude},${position.longitude}',
+          'did': value,
+          'status': 'ไรเดอร์เข้ารับสินค้าแล้ว'
+        };
+
+        db.collection('rider').doc('order$value').set(data);
+
+        KeepDidInTableDelivery keep = KeepDidInTableDelivery();
+        keep.clickGetorder = true;
+        keep.did = value.toString();
+        context.read<Appdata>().didInTableDelivery = keep;
+
+        if (resultsResponseRiderBody.isEmpty) {
+          log("No rider data available");
+          return;
+        }
+
+        var jsonriderass = {
+          'delivery_id': value,
+          'rider_id': riderId,
+          'status': "ไรเดอร์เข้ารับสินค้าแล้ว",
+          'image_receiver': '-',
+          'image_success': '-'
+        };
+
+        var jsonencode = jsonEncode(jsonriderass);
+
+        var responsePostJsonRiderass = await http.post(
+          Uri.parse("$url/rider_assigns/insert"),
+          headers: {"Content-Type": "application/json; charset=utf-8"},
+          body: jsonencode, // Use the encoded JSON string directly
+        );
+
+        if (responsePostJsonRiderass.statusCode == 200) {
+          var json = {"status": "ไรเดอร์เข้ารับสินค้าแล้ว"};
+          var responsePutJsonUpdateMember = await http.put(
+            Uri.parse("$url/delivery/update/$value"),
+            headers: {"Content-Type": "application/json; charset=utf-8"},
+            body: jsonEncode(json),
+          );
+          log('เข้าอันนี้ละ1');
+          Get.to(() => const GetorderPage());
+        } else {
+          log("can't receive order");
+        }
+      }
     }
   }
 

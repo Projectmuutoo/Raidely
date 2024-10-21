@@ -66,6 +66,18 @@ class _GetorderPageState extends State<GetorderPage> {
       });
     }
     var did = context.read<Appdata>().didInTableDelivery.did;
+    positionStream = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 10,
+      ),
+    ).listen((Position position) {
+      currentRiderLocation = LatLng(position.latitude, position.longitude);
+      updatelocation(currentRiderLocation);
+
+      riderlocation =
+          LatLng(currentRiderLocation.latitude, currentRiderLocation.longitude);
+    });
     FirebaseFirestore.instance
         .collection('riderGetOrder')
         .doc('order$did')

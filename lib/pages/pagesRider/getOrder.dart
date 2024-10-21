@@ -52,10 +52,12 @@ class _GetorderPageState extends State<GetorderPage> {
   late List<ByPhoneRiderGetResponse> resultsResponseRiderBody = [];
   final box = GetStorage();
   var db = FirebaseFirestore.instance;
+  late BitmapDescriptor customIcon;
 
   @override
   void initState() {
     loadData = loadDataAsync();
+    _setCustomMarkerIcon();
     if (context.read<Appdata>().didInTableDelivery.clickGetorder) {
       setState(() {
         clickGetOrder =
@@ -66,7 +68,7 @@ class _GetorderPageState extends State<GetorderPage> {
     positionStream = Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.high,
-        distanceFilter: 10,
+        distanceFilter: 20,
       ),
     ).listen((Position position) {
       currentRiderLocation = LatLng(position.latitude, position.longitude);
@@ -119,7 +121,6 @@ class _GetorderPageState extends State<GetorderPage> {
     try {
       var config = await Configuration.getConfig();
       var url = config['apiEndpoint'].toString();
-      var apiKey = config['apiKey'];
       var did = context.read<Appdata>().didInTableDelivery.did;
       var phone = context.read<Appdata>().loginKeepUsers.phone;
       var responseRider = await http.get(Uri.parse('$url/rider/$phone'));
@@ -354,8 +355,9 @@ class _GetorderPageState extends State<GetorderPage> {
                                 children: [
                                   SizedBox(
                                     width: width * 0.25,
-                                    child: Image.asset(
-                                      'assets/images/red.png',
+                                    child: Image.network(
+                                      listResultsResponeDeliveryByDid
+                                          .senderImageMember,
                                       height: height * 0.1,
                                     ),
                                   ),
@@ -840,6 +842,13 @@ class _GetorderPageState extends State<GetorderPage> {
     positionStream?.cancel();
   }
 
+  void _setCustomMarkerIcon() async {
+    customIcon = await BitmapDescriptor.fromAssetImage(
+      const ImageConfiguration(size: Size(24, 24)), // กำหนดขนาดของภาพ
+      'assets/images/motorcycle.png', // path ของภาพใน assets
+    );
+  }
+
   Future<void> _addMarkerAndDrawRoute() async {
     // ลบมาร์กเกอร์ที่มีอยู่ก่อนหน้านี้
     _markers.clear();
@@ -847,24 +856,22 @@ class _GetorderPageState extends State<GetorderPage> {
     // แสดงมาร์กเกอร์สำหรับ Rider
     _markers.add(
       Marker(
-        markerId: const MarkerId('start'),
+        markerId: const MarkerId('คุณ'),
         position: riderlocation,
         infoWindow: const InfoWindow(
-          title: 'Rider',
-          snippet: 'รายละเอียดเกี่ยวกับจุดเริ่มต้น',
+          title: 'คุณ',
         ),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+        icon: customIcon,
       ),
     );
 
     if (displayRiderSender) {
       _markers.add(
         Marker(
-          markerId: const MarkerId('sender'),
+          markerId: const MarkerId('จุดรับของ'),
           position: senderlocation,
           infoWindow: const InfoWindow(
-            title: 'Sender',
-            snippet: 'รายละเอียดเกี่ยวกับปลายทาง',
+            title: 'จุดรับของ',
           ),
           icon:
               BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
@@ -875,11 +882,10 @@ class _GetorderPageState extends State<GetorderPage> {
     if (displayRiderReceiver) {
       _markers.add(
         Marker(
-          markerId: const MarkerId('receiver'),
+          markerId: const MarkerId('จุดส่งของ'),
           position: receiverlocation,
           infoWindow: const InfoWindow(
-            title: 'Receiver',
-            snippet: 'รายละเอียดเกี่ยวกับปลายทาง',
+            title: 'จุดส่งของ',
           ),
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
         ),

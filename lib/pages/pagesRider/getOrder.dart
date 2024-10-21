@@ -947,16 +947,6 @@ class _GetorderPageState extends State<GetorderPage> {
       }
     } else if (i == 1) {
       _getCurrentLocation();
-
-      var result = await db
-          .collection('detailsShippingList')
-          .doc('order${listResultsResponeDeliveryByDid.itemName}')
-          .get();
-      var datas = result.data();
-      List<String> latLngReceiver = datas!['receiver_Gps'].split(',');
-      double receiverLatitude = double.parse(latLngReceiver[0].trim());
-      double receiverLongitude = double.parse(latLngReceiver[1].trim());
-      _fetchRoute(receiverLatitude, receiverLongitude);
       // แสดง Loading Indicator
       Get.defaultDialog(
         title: "",
@@ -1003,6 +993,15 @@ class _GetorderPageState extends State<GetorderPage> {
       } finally {
         Get.back();
       }
+      var result = await db
+          .collection('detailsShippingList')
+          .doc('order${listResultsResponeDeliveryByDid.itemName}')
+          .get();
+      var datas = result.data();
+      List<String> latLngReceiver = datas!['receiver_Gps'].split(',');
+      double receiverLatitude = double.parse(latLngReceiver[0].trim());
+      double receiverLongitude = double.parse(latLngReceiver[1].trim());
+      _fetchRoute(receiverLatitude, receiverLongitude);
       var jsondelivery = {
         "status": "ไรเดอร์กำลังนำส่งสินค้า",
         "rider_receive": downloadUrlReceive

@@ -146,150 +146,165 @@ class _HomeriderPageState extends State<HomeriderPage> {
               ),
             ),
             body: Container(
-              color: const Color(0xffD9D9D9),
+              color: Colors.white,
               height: height,
               child: RefreshIndicator(
                 onRefresh: loadDataAsync,
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  child: Column(
-                    children: listResultsResponeDeliveryAll.map(
-                      (value) {
-                        return Column(
-                          children: [
-                            Container(
-                              decoration: const BoxDecoration(
-                                color: Color(0xffFEF7E7),
-                                border: Border(
-                                  bottom: BorderSide(
-                                    color: Colors.grey,
-                                    width: 3,
-                                  ),
-                                ),
-                              ),
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: width * 0.03,
-                                  vertical: height * 0.01,
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Image.network(
-                                          value.image,
-                                          width: width * 0.15,
-                                          fit: BoxFit.contain,
+                  child: listResultsResponeDeliveryAll.isEmpty
+                      ? Container(
+                          color: Colors.white,
+                          height: height,
+                          width: width,
+                        )
+                      : Column(
+                          children: listResultsResponeDeliveryAll.map(
+                            (value) {
+                              return Column(
+                                children: [
+                                  Container(
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xffFEF7E7),
+                                      border: Border(
+                                        bottom: BorderSide(
+                                          color: Colors.grey,
+                                          width: 3,
                                         ),
-                                        Padding(
-                                          padding: EdgeInsets.only(
-                                            left: width * 0.03,
-                                          ),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
+                                      ),
+                                    ),
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: width * 0.03,
+                                        vertical: height * 0.01,
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
                                             children: [
-                                              Text(
-                                                value.itemName,
-                                                style: TextStyle(
-                                                  fontSize: Get.textTheme
-                                                      .titleLarge!.fontSize,
-                                                  color:
-                                                      const Color(0xff51281D),
-                                                ),
+                                              Image.network(
+                                                value.image,
+                                                width: width * 0.15,
+                                                fit: BoxFit.contain,
                                               ),
-                                              SizedBox(height: height * 0.005),
-                                              Text(
-                                                value.senderName,
-                                                style: TextStyle(
-                                                  fontSize: Get.textTheme
-                                                      .titleLarge!.fontSize,
-                                                  color:
-                                                      const Color(0xff51281D),
+                                              Padding(
+                                                padding: EdgeInsets.only(
+                                                  left: width * 0.03,
+                                                ),
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      value.itemName,
+                                                      style: TextStyle(
+                                                        fontSize: Get
+                                                            .textTheme
+                                                            .titleLarge!
+                                                            .fontSize,
+                                                        color: const Color(
+                                                            0xff51281D),
+                                                      ),
+                                                    ),
+                                                    SizedBox(
+                                                        height: height * 0.005),
+                                                    Text(
+                                                      value.senderName,
+                                                      style: TextStyle(
+                                                        fontSize: Get
+                                                            .textTheme
+                                                            .titleLarge!
+                                                            .fontSize,
+                                                        color: const Color(
+                                                            0xff51281D),
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
                                             ],
                                           ),
-                                        ),
-                                      ],
+                                          SizedBox(height: height * 0.02),
+                                          Container(
+                                            width: width,
+                                            height: 1,
+                                            color: const Color(0xffBFBFBF),
+                                          ),
+                                          SizedBox(height: height * 0.01),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                              ElevatedButton(
+                                                onPressed: () {
+                                                  getOrder(value.did,
+                                                      value.itemName);
+                                                },
+                                                style: ElevatedButton.styleFrom(
+                                                  fixedSize: Size(
+                                                    width * 0.32,
+                                                    height * 0.05,
+                                                  ),
+                                                  backgroundColor:
+                                                      const Color(0xff1EAC81),
+                                                  elevation: 2,
+                                                  shadowColor: Colors.black,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            24),
+                                                  ),
+                                                ),
+                                                child: Text(
+                                                  "รับออเดอร์นี้",
+                                                  style: TextStyle(
+                                                    fontSize: Get.textTheme
+                                                        .titleLarge!.fontSize,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ),
+                                              ElevatedButton(
+                                                onPressed: () =>
+                                                    getOrderDetails(value.did),
+                                                style: ElevatedButton.styleFrom(
+                                                  fixedSize: Size(
+                                                    width * 0.32,
+                                                    height * 0.05,
+                                                  ),
+                                                  backgroundColor:
+                                                      const Color(0xff7C7C7C),
+                                                  elevation: 2,
+                                                  shadowColor: Colors.black,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            24),
+                                                  ),
+                                                ),
+                                                child: Text(
+                                                  "รายละเอียด",
+                                                  style: TextStyle(
+                                                    fontSize: Get.textTheme
+                                                        .titleLarge!.fontSize,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                    SizedBox(height: height * 0.02),
-                                    Container(
-                                      width: width,
-                                      height: 1,
-                                      color: const Color(0xffBFBFBF),
-                                    ),
-                                    SizedBox(height: height * 0.01),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            getOrder(value.did, value.itemName);
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            fixedSize: Size(
-                                              width * 0.32,
-                                              height * 0.05,
-                                            ),
-                                            backgroundColor:
-                                                const Color(0xff1EAC81),
-                                            elevation: 2,
-                                            shadowColor: Colors.black,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(24),
-                                            ),
-                                          ),
-                                          child: Text(
-                                            "รับออเดอร์นี้",
-                                            style: TextStyle(
-                                              fontSize: Get.textTheme
-                                                  .titleLarge!.fontSize,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ),
-                                        ElevatedButton(
-                                          onPressed: () =>
-                                              getOrderDetails(value.did),
-                                          style: ElevatedButton.styleFrom(
-                                            fixedSize: Size(
-                                              width * 0.32,
-                                              height * 0.05,
-                                            ),
-                                            backgroundColor:
-                                                const Color(0xff7C7C7C),
-                                            elevation: 2,
-                                            shadowColor: Colors.black,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(24),
-                                            ),
-                                          ),
-                                          child: Text(
-                                            "รายละเอียด",
-                                            style: TextStyle(
-                                              fontSize: Get.textTheme
-                                                  .titleLarge!.fontSize,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: height * 0.01),
-                          ],
-                        );
-                      },
-                    ).toList(),
-                  ),
+                                  ),
+                                  SizedBox(height: height * 0.01),
+                                ],
+                              );
+                            },
+                          ).toList(),
+                        ),
                 ),
               ),
             ),

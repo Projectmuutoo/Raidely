@@ -33,13 +33,11 @@ class GetorderPage extends StatefulWidget {
 class _GetorderPageState extends State<GetorderPage> {
   late Future<void> loadData;
   late GoogleMapController mapController;
-
   final Set<Marker> _markers = {};
   Polyline _polyline =
       const Polyline(polylineId: PolylineId('route'), points: []);
   late DeliveryByDidGetResponse listResultsResponeDeliveryByDid;
   late LatLng riderlocation;
-  late LatLng itemlocation;
   late LatLng senderlocation;
   late LatLng receiverlocation;
   late LatLng currentRiderLocation; // Default value
@@ -48,7 +46,6 @@ class _GetorderPageState extends State<GetorderPage> {
   File? savedFile;
   XFile? image;
   ImagePicker picker = ImagePicker();
-  Set<Marker> markers = {}; // Set ของ Marker
   bool displayRiderSender = true;
   bool displayRiderReceiver = true;
   bool isDelivered = false; // สถานะของการส่งสินค้า
@@ -73,7 +70,6 @@ class _GetorderPageState extends State<GetorderPage> {
       ),
     ).listen((Position position) {
       currentRiderLocation = LatLng(position.latitude, position.longitude);
-      updatelocation(currentRiderLocation);
 
       riderlocation =
           LatLng(currentRiderLocation.latitude, currentRiderLocation.longitude);
@@ -138,7 +134,7 @@ class _GetorderPageState extends State<GetorderPage> {
         listResultsResponeDeliveryByDid =
             deliveryByDidGetResponseFromJson(response.body);
         // ตรวจสอบค่าของ Sender GPS ก่อนตั้งค่า
-        var db = FirebaseFirestore.instance;
+
         var result = await db
             .collection('detailsShippingList')
             .doc('order${listResultsResponeDeliveryByDid.itemName}')
@@ -630,26 +626,10 @@ class _GetorderPageState extends State<GetorderPage> {
                             ),
                           ),
                   ),
-                  //=================================================================================================
-                  //=================================================================================================
-                  //=================================================================================================
-                  //=================================================================================================
-                  //=================================================================================================
-                  //=================================================================================================
-                  //=================================================================================================
-                  //=================================================================================================
-                  //=================================================================================================
-                  //=================================================================================================
-                  //=================================================================================================
-                  //=================================================================================================
-                  //=================================================================================================
-                  //=================================================================================================
-
                   if (!clickGetOrder)
                     //กดรายละเอียดมา
                     ElevatedButton(
                       onPressed: () async {
-                        var db = FirebaseFirestore.instance;
                         var result = await db
                             .collection('detailsShippingList')
                             .doc(
@@ -803,17 +783,6 @@ class _GetorderPageState extends State<GetorderPage> {
                       ),
                     ),
                 ],
-                //=================================================================================================
-                //=================================================================================================
-                //=================================================================================================
-                //=================================================================================================
-                //=================================================================================================
-                //=================================================================================================
-                //=================================================================================================
-                //=================================================================================================
-                //=================================================================================================
-                //=================================================================================================
-                //=================================================================================================
               ),
             );
           },
@@ -857,7 +826,6 @@ class _GetorderPageState extends State<GetorderPage> {
         ),
       ).listen((Position position) {
         currentRiderLocation = LatLng(position.latitude, position.longitude);
-        updatelocation(currentRiderLocation);
 
         riderlocation = LatLng(
             currentRiderLocation.latitude, currentRiderLocation.longitude);
@@ -923,32 +891,12 @@ class _GetorderPageState extends State<GetorderPage> {
     });
   }
 
-  Future<void> updatelocation(LatLng currentRiderLocation) async {
-    var db = FirebaseFirestore.instance;
-    var data = {
-      'gpsRider':
-          '${currentRiderLocation.latitude},${currentRiderLocation.longitude}',
-      'did': context.read<Appdata>().didInTableDelivery.did,
-    };
-
-    db
-        .collection('riderGetOrder')
-        .doc('order${context.read<Appdata>().didInTableDelivery.did}')
-        .set(data);
-  }
-
   Future<void> updateStatusdelivery(int did, int i) async {
-    var db = FirebaseFirestore.instance;
     var config = await Configuration.getConfig();
     var url = config['apiEndpoint'].toString();
+    final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
 
-    //=================================
-    //=================================
-    //=================================
-    //ตัวแปรภาพ
-    //=================================
-    //=================================
-    //=================================
     if (i == 0) {
       var result = await db
           .collection('detailsShippingList')
@@ -989,9 +937,6 @@ class _GetorderPageState extends State<GetorderPage> {
       );
 
       if (responsePostJsonRiderass.statusCode == 200) {
-        final position = await Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.high);
-        var db = FirebaseFirestore.instance;
         var data = {
           'gpsRider': '${position.latitude},${position.longitude}',
           'did': did,
@@ -1001,13 +946,8 @@ class _GetorderPageState extends State<GetorderPage> {
         db.collection('riderGetOrder').doc('order$did').set(data);
       }
     } else if (i == 1) {
-      // //////////////////////////////////////////////////////////
-      // //////////////////////////////////////////////////////////
-      // //////////////////////////////////////////////////////////
-      // //////////////////////////////////////////////////////////
-      // //////////////////////////////////////////////////////////
       _getCurrentLocation();
-      var db = FirebaseFirestore.instance;
+
       var result = await db
           .collection('detailsShippingList')
           .doc('order${listResultsResponeDeliveryByDid.itemName}')
@@ -1017,18 +957,52 @@ class _GetorderPageState extends State<GetorderPage> {
       double receiverLatitude = double.parse(latLngReceiver[0].trim());
       double receiverLongitude = double.parse(latLngReceiver[1].trim());
       _fetchRoute(receiverLatitude, receiverLongitude);
+      // แสดง Loading Indicator
+      Get.defaultDialog(
+        title: "",
+        titlePadding: EdgeInsets.zero,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: MediaQuery.of(context).size.width * 0.02,
+          vertical: MediaQuery.of(context).size.height * 0.02,
+        ),
+        content: Column(
+          children: [
+            const CircularProgressIndicator(),
+            SizedBox(height: MediaQuery.of(context).size.width * 0.03),
+            Text(
+              'กำลังบันทึกข้อมูล..',
+              style: TextStyle(
+                fontSize: Get.textTheme.titleLarge!.fontSize,
+                color: const Color(0xffaf4c31),
+              ),
+            ),
+            Text(
+              'เรากำลังบันทึกข้อมูล กรุณารอสักครู่...',
+              style: TextStyle(
+                fontSize: Get.textTheme.titleSmall!.fontSize,
+              ),
+            ),
+          ],
+        ),
+        barrierDismissible: false,
+      );
+      var downloadUrlReceive = '';
+      try {
+        // สร้างอ้างอิงไปยัง Firebase Storage
+        Reference storageReference = FirebaseStorage.instance.ref().child(
+            'riderGetOrderUploadImage/${DateTime.now().millisecondsSinceEpoch}_${savedFile!.path.split('/').last}');
 
-      // สร้างอ้างอิงไปยัง Firebase Storage
-      Reference storageReference = FirebaseStorage.instance.ref().child(
-          'riderGetOrderUploadImage/${DateTime.now().millisecondsSinceEpoch}_${savedFile!.path.split('/').last}');
+        // อัพโหลดไฟล์และรอจนกว่าจะเสร็จสิ้น
+        UploadTask uploadTask = storageReference.putFile(savedFile!);
+        TaskSnapshot taskSnapshot = await uploadTask;
 
-      // อัพโหลดไฟล์และรอจนกว่าจะเสร็จสิ้น
-      UploadTask uploadTask = storageReference.putFile(savedFile!);
-      TaskSnapshot taskSnapshot = await uploadTask;
-
-      // รับ URL ของรูปที่อัพโหลดสำเร็จ
-      var downloadUrlReceive = await taskSnapshot.ref.getDownloadURL();
-      box.write('downloadUrlReceive', downloadUrlReceive);
+        // รับ URL ของรูปที่อัพโหลดสำเร็จ
+        downloadUrlReceive = await taskSnapshot.ref.getDownloadURL();
+        box.write('downloadUrlReceive', downloadUrlReceive);
+      } catch (e) {
+      } finally {
+        Get.back();
+      }
       var jsondelivery = {
         "status": "ไรเดอร์กำลังนำส่งสินค้า",
         "rider_receive": downloadUrlReceive
@@ -1047,8 +1021,6 @@ class _GetorderPageState extends State<GetorderPage> {
         headers: {"Content-Type": "application/json; charset=utf-8"},
         body: jsonEncode(jsonriderass),
       );
-      final position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
 
       var data = {
         'gpsRider': '${position.latitude},${position.longitude}',
@@ -1061,25 +1033,51 @@ class _GetorderPageState extends State<GetorderPage> {
       savedFile = null;
       setState(() {});
     } else {
-      // ///////////////////////////////////////////////
-      // ///////////////////////////////////////////////
-      // ///////////////////////////////////////////////
-      // ///////////////////////////////////////////////
-      // ///////////////////////////////////////////////
-      // ///////////////////////////////////////////////
-      // ///////////////////////////////////////////////
-      // ///////////////////////////////////////////////
-      // ///////////////////////////////////////////////
-      // สร้างอ้างอิงไปยัง Firebase Storage
-      Reference storageReference = FirebaseStorage.instance.ref().child(
-          'riderGetOrderUploadImage/${DateTime.now().millisecondsSinceEpoch}_${savedFile!.path.split('/').last}');
+      // แสดง Loading Indicator
+      Get.defaultDialog(
+        title: "",
+        titlePadding: EdgeInsets.zero,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: MediaQuery.of(context).size.width * 0.02,
+          vertical: MediaQuery.of(context).size.height * 0.02,
+        ),
+        content: Column(
+          children: [
+            const CircularProgressIndicator(),
+            SizedBox(height: MediaQuery.of(context).size.width * 0.03),
+            Text(
+              'กำลังบันทึกข้อมูล..',
+              style: TextStyle(
+                fontSize: Get.textTheme.titleLarge!.fontSize,
+                color: const Color(0xffaf4c31),
+              ),
+            ),
+            Text(
+              'เรากำลังบันทึกข้อมูล กรุณารอสักครู่...',
+              style: TextStyle(
+                fontSize: Get.textTheme.titleSmall!.fontSize,
+              ),
+            ),
+          ],
+        ),
+        barrierDismissible: false,
+      );
+      var downloadUrlSuccess = '';
+      try {
+        // สร้างอ้างอิงไปยัง Firebase Storage
+        Reference storageReference = FirebaseStorage.instance.ref().child(
+            'riderGetOrderUploadImage/${DateTime.now().millisecondsSinceEpoch}_${savedFile!.path.split('/').last}');
 
-      // อัพโหลดไฟล์และรอจนกว่าจะเสร็จสิ้น
-      UploadTask uploadTask = storageReference.putFile(savedFile!);
-      TaskSnapshot taskSnapshot = await uploadTask;
+        // อัพโหลดไฟล์และรอจนกว่าจะเสร็จสิ้น
+        UploadTask uploadTask = storageReference.putFile(savedFile!);
+        TaskSnapshot taskSnapshot = await uploadTask;
 
-      // รับ URL ของรูปที่อัพโหลดสำเร็จ
-      var downloadUrlSuccess = await taskSnapshot.ref.getDownloadURL();
+        // รับ URL ของรูปที่อัพโหลดสำเร็จ
+        downloadUrlSuccess = await taskSnapshot.ref.getDownloadURL();
+      } catch (e) {
+      } finally {
+        Get.back();
+      }
       var jsondelivery = {
         "status": "ส่งสินค้าสำเร็จ",
         "rider_success": downloadUrlSuccess
@@ -1098,10 +1096,6 @@ class _GetorderPageState extends State<GetorderPage> {
         headers: {"Content-Type": "application/json; charset=utf-8"},
         body: jsonEncode(jsonriderass),
       );
-      final position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
-
-      var db = FirebaseFirestore.instance;
 
       var data = {
         'gpsRider': '${position.latitude},${position.longitude}',

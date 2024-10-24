@@ -519,8 +519,10 @@ class _HomeriderPageState extends State<HomeriderPage> {
   void getOrderDetails(int value, String itemname) async {
     var db = FirebaseFirestore.instance;
     // สร้าง KeepDidInTableDelivery ใหม่
+
     KeepDidInTableDelivery keep = KeepDidInTableDelivery();
     keep.did = value.toString();
+    keep.itemname = itemname;
     context.read<Appdata>().didInTableDelivery = keep;
 
     // ตรวจสอบว่าค่าปัจจุบันคือ clickGetorder เป็น true หรือไม่
@@ -537,7 +539,7 @@ class _HomeriderPageState extends State<HomeriderPage> {
       'did': value,
       'status': 'ดูสินค้า',
     };
-    db.collection('riderGetOrder').doc('order$itemname').set(data);
+    db.collection('riderGetOrder').doc('order$itemname').update(data);
 
     // ส่งค่าที่ต้องการไปยัง GetorderPage
     Get.to(() => const GetorderPage()); // ส่งค่า value ไปยัง GetorderPage

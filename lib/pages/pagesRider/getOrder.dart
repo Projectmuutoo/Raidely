@@ -73,8 +73,8 @@ class _GetorderPageState extends State<GetorderPage> {
       ),
     ).listen((Position position) async {
       currentRiderLocation = LatLng(position.latitude, position.longitude);
-      riderlocation =
-          LatLng(currentRiderLocation.latitude, currentRiderLocation.longitude);
+      // riderlocation =
+      //     LatLng(currentRiderLocation.latitude, currentRiderLocation.longitude);
       var result1 = await db
           .collection('riderGetOrder')
           .doc('order${listResultsResponeDeliveryByDid.itemName}')

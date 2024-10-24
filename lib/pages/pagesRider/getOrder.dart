@@ -967,6 +967,8 @@ class _GetorderPageState extends State<GetorderPage> {
           'gpsRider': '${position.latitude},${position.longitude}',
           'did': did,
           'status': 'ไรเดอร์เข้ารับสินค้าแล้ว',
+          'image_receiver': '',
+          'image_success': ''
         };
 
         db.collection('riderGetOrder').doc('order$itemname').set(data);

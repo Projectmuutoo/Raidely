@@ -1045,6 +1045,8 @@ class _DetailsShippingListState extends State<DetailsShippingList> {
           var datas = {
             'status': 'รอไรเดอร์เข้ารับสินค้า',
             'gpsRider': ',',
+            'image_receiver': '',
+            'image_success': ''
           };
           db
               .collection('riderGetOrder')

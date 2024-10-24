@@ -502,6 +502,8 @@ class _HomeriderPageState extends State<HomeriderPage> {
       if (responsePostJsonRiderass.statusCode == 200) {
         var json = {
           "status": "ไรเดอร์เข้ารับสินค้าแล้ว",
+          'image_receiver': '',
+          'image_success': ''
         };
         var responsePutJsonUpdateMember = await http.put(
           Uri.parse("$url/delivery/update/$value"),

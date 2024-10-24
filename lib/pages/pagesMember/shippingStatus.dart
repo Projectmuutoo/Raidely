@@ -30,25 +30,29 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
   LatLng? senderlocation;
   LatLng? itemlocation;
   String showStatus = '';
+  String image_receive = '';
+  String image_success = '';
   var db = FirebaseFirestore.instance;
   late BitmapDescriptor customIcon;
 
   @override
   void initState() {
     loadData = loadDataAsync();
-    super.initState();
+    _setCustomMarkerIcon();
 
     // Listen to real-time updates from Firestore
     FirebaseFirestore.instance
         .collection('riderGetOrder')
         .doc('order${context.read<Appdata>().didFileShippingStatus.itemname}')
         .snapshots()
-        .listen((snapshot) async {
+        .listen((snapshot) {
       var data = snapshot.data();
       if (data != null) {
         List<String> latLngSender = data['gpsRider'].split(',');
         showStatus = data['status'];
         setState(() {
+          image_receive = data['image_receive'];
+          image_success = data['image_success'];
           senderlocation = LatLng(double.parse(latLngSender[0].trim()),
               double.parse(latLngSender[1].trim()));
           _addMarkerAndDrawRoute(); // Update map markers and routes
@@ -56,6 +60,7 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
         });
       }
     });
+    super.initState();
   }
 
   Future<void> loadDataAsync() async {
@@ -427,7 +432,7 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                                                   ),
                                                   Container(
                                                     width: width * 0.002,
-                                                    height: height * 0.05,
+                                                    height: height * 0.13,
                                                     color: Colors.black,
                                                   ),
                                                   Column(
@@ -466,7 +471,7 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                                                   ),
                                                   Container(
                                                     width: width * 0.002,
-                                                    height: height * 0.05,
+                                                    height: height * 0.12,
                                                     color: Colors.black,
                                                   ),
                                                   Column(
@@ -507,7 +512,7 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                                                   ),
                                                   Container(
                                                     width: width * 0.002,
-                                                    height: height * 0.05,
+                                                    height: height * 0.13,
                                                     color: Colors.black,
                                                   ),
                                                   Column(
@@ -551,22 +556,39 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                                                 ],
                                               ),
                                               Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
                                                 children: [
                                                   Row(
                                                     children: [
-                                                      Text(
-                                                        'ไรเดอร์ส่งสินค้าแล้ว',
-                                                        style: TextStyle(
-                                                          fontSize: Get
-                                                              .textTheme
-                                                              .titleMedium!
-                                                              .fontSize,
-                                                        ),
-                                                      )
+                                                      Column(
+                                                        children: [
+                                                          Text(
+                                                            'ไรเดอร์ส่งสินค้าแล้ว',
+                                                            style: TextStyle(
+                                                              fontSize: Get
+                                                                  .textTheme
+                                                                  .titleMedium!
+                                                                  .fontSize,
+                                                            ),
+                                                          ),
+                                                          image_success.isEmpty
+                                                              ? Container()
+                                                              : Image.network(
+                                                                  image_success,
+                                                                  width: width *
+                                                                      0.22,
+                                                                )
+                                                        ],
+                                                      ),
                                                     ],
                                                   ),
-                                                  SizedBox(
-                                                      height: height * 0.06),
+                                                  image_success.isEmpty
+                                                      ? SizedBox(
+                                                          height: height * 0.14)
+                                                      : SizedBox(
+                                                          height:
+                                                              height * 0.04),
                                                   Row(
                                                     children: [
                                                       Text(
@@ -581,22 +603,37 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                                                     ],
                                                   ),
                                                   SizedBox(
-                                                      height: height * 0.06),
+                                                      height: height * 0.13),
                                                   Row(
                                                     children: [
-                                                      Text(
-                                                        'ไรเดอร์เข้ารับสินค้าแล้ว',
-                                                        style: TextStyle(
-                                                          fontSize: Get
-                                                              .textTheme
-                                                              .titleMedium!
-                                                              .fontSize,
-                                                        ),
-                                                      )
+                                                      Column(
+                                                        children: [
+                                                          Text(
+                                                            'ไรเดอร์เข้ารับสินค้าแล้ว',
+                                                            style: TextStyle(
+                                                              fontSize: Get
+                                                                  .textTheme
+                                                                  .titleMedium!
+                                                                  .fontSize,
+                                                            ),
+                                                          ),
+                                                          image_receive.isEmpty
+                                                              ? Container()
+                                                              : Image.network(
+                                                                  image_receive,
+                                                                  width: width *
+                                                                      0.22,
+                                                                )
+                                                        ],
+                                                      ),
                                                     ],
                                                   ),
-                                                  SizedBox(
-                                                      height: height * 0.06),
+                                                  image_receive.isEmpty
+                                                      ? SizedBox(
+                                                          height: height * 0.14)
+                                                      : SizedBox(
+                                                          height:
+                                                              height * 0.04),
                                                   Row(
                                                     children: [
                                                       Text(
@@ -635,7 +672,6 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
     );
   }
 
-  
   void _setCustomMarkerIcon() async {
     customIcon = await BitmapDescriptor.fromAssetImage(
       const ImageConfiguration(size: Size(24, 24)), // กำหนดขนาดของภาพ
@@ -653,7 +689,7 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
         infoWindow: const InfoWindow(
           title: 'ไรเดอร์',
         ),
-            icon: customIcon,
+        icon: customIcon,
       ),
     );
 

@@ -152,198 +152,140 @@ class _CreateshippinglistPageState extends State<CreateshippinglistPage> {
               ),
             ),
           ),
-          body: SingleChildScrollView(
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  RefreshIndicator(
-                    onRefresh: loadDataAsync,
-                    child: SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      child: snapshot.connectionState != ConnectionState.done
-                          ? SizedBox(
-                              height: height * 0.7,
-                              child: const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  CircularProgressIndicator(),
-                                ],
+          body: RefreshIndicator(
+            onRefresh: loadDataAsync,
+            child: snapshot.connectionState != ConnectionState.done
+                ? const Center(
+                    child: CircularProgressIndicator(),
+                  )
+                : resultsResponseDeliveryByMid.isEmpty
+                    ? Center(
+                        child: Text(
+                          'ไม่มีรายการส่งสินค้า',
+                          style: TextStyle(
+                            fontSize: Get.textTheme.headlineMedium!.fontSize,
+                            color: const Color(0xff856158),
+                          ),
+                        ),
+                      )
+                    : ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        itemCount: resultsResponseDeliveryByMid.length,
+                        itemBuilder: (context, index) {
+                          var value = resultsResponseDeliveryByMid[index];
+                          return Container(
+                            decoration: const BoxDecoration(
+                              color: Color(0xffFEF7E7),
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: Colors.grey,
+                                  width: 3,
+                                ),
                               ),
-                            )
-                          : resultsResponseDeliveryByMid.isEmpty
-                              ? SizedBox(
-                                  height: height * 0.7,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
+                            ),
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: width * 0.03,
+                                vertical: height * 0.01,
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Image.network(
+                                            value.image,
+                                            width: width * 0.15,
+                                            fit: BoxFit.contain,
+                                          ),
+                                          Padding(
+                                            padding: EdgeInsets.only(
+                                              left: width * 0.03,
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  value.itemName,
+                                                  style: TextStyle(
+                                                    fontSize: Get.textTheme
+                                                        .titleLarge!.fontSize,
+                                                    color:
+                                                        const Color(0xff51281D),
+                                                  ),
+                                                ),
+                                                SizedBox(
+                                                    height: height * 0.005),
+                                                Text(
+                                                  'ถึง: ${value.receiverName}',
+                                                  style: TextStyle(
+                                                    fontSize: Get.textTheme
+                                                        .titleLarge!.fontSize,
+                                                    color:
+                                                        const Color(0xff51281D),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
                                       Text(
-                                        'ไม่มีรายการส่งสินค้า',
+                                        value.status,
                                         style: TextStyle(
-                                          fontSize: Get.textTheme
-                                              .headlineMedium!.fontSize,
-                                          color: const Color(0xff856158),
+                                          fontSize: Get
+                                              .textTheme.labelLarge!.fontSize,
+                                          color: const Color(0xff51281D),
+                                        ),
+                                      ),
+                                      SizedBox(height: height * 0.01),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          getStatusShipping(
+                                              value.did, value.itemName);
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          fixedSize: Size(
+                                            width * 0.28,
+                                            height * 0.04,
+                                          ),
+                                          backgroundColor:
+                                              const Color(0xff7C7C7C),
+                                          elevation: 2,
+                                          shadowColor: Colors.black,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          "รายละเอียด",
+                                          style: TextStyle(
+                                            fontSize: Get
+                                                .textTheme.titleSmall!.fontSize,
+                                            color: Colors.white,
+                                          ),
                                         ),
                                       ),
                                     ],
                                   ),
-                                )
-                              : Column(
-                                  children: resultsResponseDeliveryByMid.map(
-                                    (value) {
-                                      return Column(
-                                        children: [
-                                          Container(
-                                            decoration: const BoxDecoration(
-                                              color: Color(0xffFEF7E7),
-                                              border: Border(
-                                                bottom: BorderSide(
-                                                  color: Colors.grey,
-                                                  width: 3,
-                                                ),
-                                              ),
-                                            ),
-                                            child: Padding(
-                                              padding: EdgeInsets.symmetric(
-                                                horizontal: width * 0.03,
-                                                vertical: height * 0.01,
-                                              ),
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Row(
-                                                        children: [
-                                                          Image.network(
-                                                            value.image,
-                                                            width: width * 0.15,
-                                                            fit: BoxFit.contain,
-                                                          ),
-                                                          Padding(
-                                                            padding:
-                                                                EdgeInsets.only(
-                                                              left:
-                                                                  width * 0.03,
-                                                            ),
-                                                            child: Column(
-                                                              crossAxisAlignment:
-                                                                  CrossAxisAlignment
-                                                                      .start,
-                                                              children: [
-                                                                Text(
-                                                                  value
-                                                                      .itemName,
-                                                                  style:
-                                                                      TextStyle(
-                                                                    fontSize: Get
-                                                                        .textTheme
-                                                                        .titleLarge!
-                                                                        .fontSize,
-                                                                    color: const Color(
-                                                                        0xff51281D),
-                                                                  ),
-                                                                ),
-                                                                SizedBox(
-                                                                    height:
-                                                                        height *
-                                                                            0.005),
-                                                                Text(
-                                                                  'ถึง: ${value.receiverName}',
-                                                                  style:
-                                                                      TextStyle(
-                                                                    fontSize: Get
-                                                                        .textTheme
-                                                                        .titleLarge!
-                                                                        .fontSize,
-                                                                    color: const Color(
-                                                                        0xff51281D),
-                                                                  ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment.end,
-                                                    children: [
-                                                      Text(
-                                                        value.status,
-                                                        style: TextStyle(
-                                                          fontSize: Get
-                                                              .textTheme
-                                                              .labelLarge!
-                                                              .fontSize,
-                                                          color: const Color(
-                                                              0xff51281D),
-                                                        ),
-                                                      ),
-                                                      SizedBox(
-                                                          height:
-                                                              height * 0.01),
-                                                      ElevatedButton(
-                                                        onPressed: () {
-                                                          getStatusShipping(
-                                                              value.did,
-                                                              value.itemName);
-                                                        },
-                                                        style: ElevatedButton
-                                                            .styleFrom(
-                                                          fixedSize: Size(
-                                                            width * 0.28,
-                                                            height * 0.04,
-                                                          ),
-                                                          backgroundColor:
-                                                              const Color(
-                                                                  0xff7C7C7C),
-                                                          elevation: 2,
-                                                          shadowColor:
-                                                              Colors.black,
-                                                          shape:
-                                                              RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        12),
-                                                          ),
-                                                        ),
-                                                        child: Text(
-                                                          "รายละเอียด",
-                                                          style: TextStyle(
-                                                            fontSize: Get
-                                                                .textTheme
-                                                                .titleSmall!
-                                                                .fontSize,
-                                                            color: Colors.white,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          SizedBox(height: height * 0.01),
-                                        ],
-                                      );
-                                    },
-                                  ).toList(),
-                                ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
           ),
         );
       },

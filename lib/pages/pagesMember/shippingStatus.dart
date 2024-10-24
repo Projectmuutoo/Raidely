@@ -38,8 +38,8 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
 
     // Listen to real-time updates from Firestore
     FirebaseFirestore.instance
-        .collection('rider')
-        .doc('test${context.read<Appdata>().didFileShippingStatus.did}')
+        .collection('riderGetOrder')
+        .doc('order${context.read<Appdata>().didFileShippingStatus.did}')
         .snapshots()
         .listen((snapshot) {
       var data = snapshot.data();

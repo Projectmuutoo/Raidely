@@ -31,6 +31,7 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
   LatLng? itemlocation;
   String showStatus = '';
   var db = FirebaseFirestore.instance;
+  late BitmapDescriptor customIcon;
 
   @override
   void initState() {
@@ -137,7 +138,7 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                     },
                     initialCameraPosition: CameraPosition(
                       target: itemlocation!,
-                      zoom: 15.0,
+                      zoom: 16.0,
                     ),
                     markers: _markers,
                     polylines: {_polyline},
@@ -634,28 +635,35 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
     );
   }
 
+  
+  void _setCustomMarkerIcon() async {
+    customIcon = await BitmapDescriptor.fromAssetImage(
+      const ImageConfiguration(size: Size(24, 24)), // กำหนดขนาดของภาพ
+      'assets/images/motorcycle.png', // path ของภาพใน assets
+    );
+  }
+
   void _addMarkerAndDrawRoute() {
     _markers.clear();
     // Add Marker for start location
     _markers.add(
       Marker(
-        markerId: const MarkerId('start'),
+        markerId: const MarkerId('ไรเดอร์'),
         position: senderlocation!,
         infoWindow: const InfoWindow(
-          title: 'จุดเริ่มต้น',
-          snippet: 'รายละเอียดเกี่ยวกับจุดเริ่มต้น',
+          title: 'ไรเดอร์',
         ),
+            icon: customIcon,
       ),
     );
 
     // Add Marker for end location
     _markers.add(
       Marker(
-        markerId: const MarkerId('end'),
+        markerId: const MarkerId('คุณ'),
         position: itemlocation!,
         infoWindow: const InfoWindow(
-          title: 'ปลายทาง',
-          snippet: 'รายละเอียดเกี่ยวกับปลายทาง',
+          title: 'คุณ',
         ),
       ),
     );

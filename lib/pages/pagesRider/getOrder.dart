@@ -73,8 +73,6 @@ class _GetorderPageState extends State<GetorderPage> {
       ),
     ).listen((Position position) async {
       currentRiderLocation = LatLng(position.latitude, position.longitude);
-      riderlocation =
-          LatLng(currentRiderLocation.latitude, currentRiderLocation.longitude);
       var result1 = await db
           .collection('riderGetOrder')
           .doc('order${listResultsResponeDeliveryByDid.itemName}')
@@ -953,7 +951,7 @@ class _GetorderPageState extends State<GetorderPage> {
       var jsonriderass = {
         'delivery_id': did,
         'rider_id': riderId,
-        'status': "ไรเดอร์รับออเดอร์แล้ว",
+        'status': "ไรเดอร์เข้ารับสินค้าแล้ว",
         'image_receiver': '-',
         'image_success': '-'
       };
@@ -968,7 +966,7 @@ class _GetorderPageState extends State<GetorderPage> {
         var data = {
           'gpsRider': '${position.latitude},${position.longitude}',
           'did': did,
-          'status': 'ไรเดอร์รับออเดอร์แล้ว',
+          'status': 'ไรเดอร์เข้ารับสินค้าแล้ว',
         };
 
         db.collection('riderGetOrder').doc('order$itemname').set(data);

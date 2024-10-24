@@ -15,7 +15,7 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   // Connnect to FireStore
   FirebaseFirestore.instance.settings = const Settings(
-    persistenceEnabled: true,
+    persistenceEnabled: true,  
   );
   _determinePosition();
   runApp(MultiProvider(

@@ -69,11 +69,25 @@ class _GetorderPageState extends State<GetorderPage> {
     positionStream = Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.high,
-        distanceFilter: 20,
+        distanceFilter: 5,
       ),
-    ).listen((Position position) {
+    ).listen((Position position) async {
       currentRiderLocation = LatLng(position.latitude, position.longitude);
-
+      var result1 = await db
+          .collection('riderGetOrder')
+          .doc('order${listResultsResponeDeliveryByDid.itemName}')
+          .get();
+      var data = result1.data();
+      if (data!['status'] == 'ไรเดอร์กำลังนำส่งสินค้า') {
+        var data = {
+          'gpsRider': '${position.latitude},${position.longitude}',
+          'status': 'ไรเดอร์กำลังนำส่งสินค้า'
+        };
+        db
+            .collection('riderGetOrder')
+            .doc('order${listResultsResponeDeliveryByDid.itemName}')
+            .set(data);
+      }
       riderlocation =
           LatLng(currentRiderLocation.latitude, currentRiderLocation.longitude);
     });

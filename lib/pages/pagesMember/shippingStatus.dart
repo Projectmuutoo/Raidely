@@ -70,7 +70,7 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
 
     // Parse sender and receiver locations
     List<String> latLngReceiver =
-        listResultsResponeDeliveryByDid.senderGps.split(',');
+        listResultsResponeDeliveryByDid.receiverGps.split(',');
     itemlocation = LatLng(double.parse(latLngReceiver[0].trim()),
         double.parse(latLngReceiver[1].trim()));
     _fetchRoute();
@@ -137,7 +137,7 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                     },
                     initialCameraPosition: CameraPosition(
                       target: itemlocation!,
-                      zoom: 14.0,
+                      zoom: 16.0,
                     ),
                     markers: _markers,
                     polylines: {_polyline},
@@ -200,11 +200,9 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                                                                   height * 0.03,
                                                             )
                                                           : showStatus ==
-                                                                      'รอไรเดอร์เข้ารับสินค้า' ||
-                                                                  showStatus ==
                                                                       'ไรเดอร์กำลังนำส่งสินค้า' ||
                                                                   showStatus ==
-                                                                      'ไรเดอร์ส่งสินค้าแล้ว' ||
+                                                                      'ส่งสินค้าสำเร็จ' ||
                                                                   showStatus ==
                                                                       'ไรเดอร์เข้ารับสินค้าแล้ว'
                                                               ? SvgPicture
@@ -245,7 +243,7 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                                                           : showStatus ==
                                                                       'ไรเดอร์กำลังนำส่งสินค้า' ||
                                                                   showStatus ==
-                                                                      'ไรเดอร์ส่งสินค้าแล้ว' ||
+                                                                      'ส่งสินค้าสำเร็จ' ||
                                                                   showStatus ==
                                                                       'ไรเดอร์เข้ารับสินค้าแล้ว'
                                                               ? SvgPicture
@@ -284,7 +282,7 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                                                                   height * 0.03,
                                                             )
                                                           : showStatus ==
-                                                                  'ไรเดอร์ส่งสินค้าแล้ว'
+                                                                  'ส่งสินค้าสำเร็จ'
                                                               ? SvgPicture
                                                                   .string(
                                                                   '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 5c-3.859 0-7 3.141-7 7s3.141 7 7 7 7-3.141 7-7-3.141-7-7-7zm0 12c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z"></path><path d="M12 9c-1.627 0-3 1.373-3 3s1.373 3 3 3 3-1.373 3-3-1.373-3-3-3z"></path></svg>',
@@ -405,7 +403,7 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                                                                   height * 0.03,
                                                             )
                                                           : showStatus ==
-                                                                  'ไรเดอร์ส่งสินค้าแล้ว'
+                                                                  'ส่งสินค้าสำเร็จ'
                                                               ? SvgPicture
                                                                   .string(
                                                                   '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 5c-3.859 0-7 3.141-7 7s3.141 7 7 7 7-3.141 7-7-3.141-7-7-7zm0 12c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z"></path><path d="M12 9c-1.627 0-3 1.373-3 3s1.373 3 3 3 3-1.373 3-3-1.373-3-3-3z"></path></svg>',
@@ -444,7 +442,7 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                                                           : showStatus ==
                                                                       'ไรเดอร์กำลังนำส่งสินค้า' ||
                                                                   showStatus ==
-                                                                      'ไรเดอร์ส่งสินค้าแล้ว'
+                                                                      'ส่งสินค้าสำเร็จ'
                                                               ? SvgPicture
                                                                   .string(
                                                                   '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 5c-3.859 0-7 3.141-7 7s3.141 7 7 7 7-3.141 7-7-3.141-7-7-7zm0 12c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z"></path><path d="M12 9c-1.627 0-3 1.373-3 3s1.373 3 3 3 3-1.373 3-3-1.373-3-3-3z"></path></svg>',
@@ -485,7 +483,7 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                                                                   showStatus ==
                                                                       'ไรเดอร์กำลังนำส่งสินค้า' ||
                                                                   showStatus ==
-                                                                      'ไรเดอร์ส่งสินค้าแล้ว'
+                                                                      'ส่งสินค้าสำเร็จ'
                                                               ? SvgPicture
                                                                   .string(
                                                                   '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 5c-3.859 0-7 3.141-7 7s3.141 7 7 7 7-3.141 7-7-3.141-7-7-7zm0 12c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z"></path><path d="M12 9c-1.627 0-3 1.373-3 3s1.373 3 3 3 3-1.373 3-3-1.373-3-3-3z"></path></svg>',
@@ -528,7 +526,7 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                                                                   showStatus ==
                                                                       'ไรเดอร์กำลังนำส่งสินค้า' ||
                                                                   showStatus ==
-                                                                      'ไรเดอร์ส่งสินค้าแล้ว'
+                                                                      'ส่งสินค้าสำเร็จ'
                                                               ? SvgPicture
                                                                   .string(
                                                                   '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 5c-3.859 0-7 3.141-7 7s3.141 7 7 7 7-3.141 7-7-3.141-7-7-7zm0 12c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z"></path><path d="M12 9c-1.627 0-3 1.373-3 3s1.373 3 3 3 3-1.373 3-3-1.373-3-3-3z"></path></svg>',

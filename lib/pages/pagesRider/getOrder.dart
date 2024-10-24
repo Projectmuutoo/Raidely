@@ -967,8 +967,8 @@ class _GetorderPageState extends State<GetorderPage> {
           'gpsRider': '${position.latitude},${position.longitude}',
           'did': did,
           'status': 'ไรเดอร์เข้ารับสินค้าแล้ว',
-          'image_receiver': '',
-          'image_success': ''
+          'image_receiver': '-',
+          'image_success': '-'
         };
 
         db.collection('riderGetOrder').doc('order$itemname').set(data);
@@ -1053,8 +1053,8 @@ class _GetorderPageState extends State<GetorderPage> {
         'gpsRider': '${position.latitude},${position.longitude}',
         'did': did,
         'status': 'ไรเดอร์กำลังนำส่งสินค้า',
-        'image_receive': downloadUrlReceive,
-        'image_success': '',
+        'image_receiver': downloadUrlReceive,
+        'image_success': '-',
       };
       db.collection('riderGetOrder').doc('order$itemname').set(data);
       savedFile = null;
@@ -1128,7 +1128,7 @@ class _GetorderPageState extends State<GetorderPage> {
         'gpsRider': '${position.latitude},${position.longitude}',
         'did': did,
         'status': 'ส่งสินค้าสำเร็จ',
-        'image_receive': box.read('downloadUrlReceive'),
+        'image_receiver': box.read('downloadUrlReceive'),
         'image_success': downloadUrlSuccess,
       };
       db.collection('riderGetOrder').doc('order$itemname').set(data);

@@ -51,7 +51,7 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
         List<String> latLngSender = data['gpsRider'].split(',');
         showStatus = data['status'];
         setState(() {
-          image_receive = data['image_receive'];
+          image_receive = data['image_receiver'];
           image_success = data['image_success'];
           senderlocation = LatLng(double.parse(latLngSender[0].trim()),
               double.parse(latLngSender[1].trim()));
@@ -66,7 +66,6 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
   Future<void> loadDataAsync() async {
     var config = await Configuration.getConfig();
     var url = config['apiEndpoint'].toString();
-    var apiKey = config['apiKey'];
     var did = context.read<Appdata>().didFileShippingStatus.did;
 
     // Fetch data from API
@@ -572,7 +571,7 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                                                                   .fontSize,
                                                             ),
                                                           ),
-                                                          image_success.isEmpty
+                                                          image_success == '-'
                                                               ? Container()
                                                               : Image.network(
                                                                   image_success,
@@ -583,7 +582,7 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                                                       ),
                                                     ],
                                                   ),
-                                                  image_success.isEmpty
+                                                  image_success == '-'
                                                       ? SizedBox(
                                                           height: height * 0.14)
                                                       : SizedBox(
@@ -617,7 +616,7 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                                                                   .fontSize,
                                                             ),
                                                           ),
-                                                          image_receive.isEmpty
+                                                          image_receive == '-'
                                                               ? Container()
                                                               : Image.network(
                                                                   image_receive,
@@ -628,7 +627,7 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                                                       ),
                                                     ],
                                                   ),
-                                                  image_receive.isEmpty
+                                                  image_receive == '-'
                                                       ? SizedBox(
                                                           height: height * 0.14)
                                                       : SizedBox(

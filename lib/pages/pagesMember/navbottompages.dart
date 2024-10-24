@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:raidely/config/config.dart';
-import 'package:http/http.dart' as http;
 import 'package:raidely/pages/pagesMember/createShippingList.dart';
 import 'package:raidely/pages/pagesMember/homeMember.dart';
 import 'package:raidely/pages/pagesMember/listProductsReceived.dart';
@@ -27,9 +26,9 @@ class _NavbottompagesPageState extends State<NavbottompagesPage> {
   @override
   void initState() {
     pageOptions = [
-      CreateshippinglistPage(),
-      HomeMemberPage(),
-      ListproductsreceivedPage()
+      const CreateshippinglistPage(),
+      const HomeMemberPage(),
+      const ListproductsreceivedPage()
     ];
     loadData = loadDataAsync();
     super.initState();
@@ -51,21 +50,10 @@ class _NavbottompagesPageState extends State<NavbottompagesPage> {
     // ใช้ width สำหรับ horizontal
     // left/right
     double width = MediaQuery.of(context).size.width;
-    // ใช้ height สำหรับ vertical
-    // top/bottom
-    double height = MediaQuery.of(context).size.height;
 
     return FutureBuilder(
       future: loadData,
       builder: (context, snapshot) {
-        // if (snapshot.connectionState != ConnectionState.done) {
-        //   return Container(
-        //     color: Colors.white,
-        //     child: const Center(
-        //       child: CircularProgressIndicator(),
-        //     ),
-        //   );
-        // }
         return Scaffold(
           appBar: null,
           bottomNavigationBar: BottomNavigationBar(

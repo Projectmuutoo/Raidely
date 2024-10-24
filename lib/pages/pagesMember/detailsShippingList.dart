@@ -14,7 +14,6 @@ import 'package:raidely/config/config.dart';
 import 'package:raidely/models/request/insertDeliveryPostRequest.dart';
 import 'package:raidely/models/request/updateMemberPutRequest.dart';
 import 'package:raidely/models/response/byPhoneMemberGetResponse.dart';
-import 'package:raidely/pages/pagesMember/homeMember.dart';
 import 'package:raidely/pages/pagesMember/navbottompages.dart';
 import 'package:raidely/shared/appData.dart';
 import 'package:http/http.dart' as http;
@@ -1045,8 +1044,8 @@ class _DetailsShippingListState extends State<DetailsShippingList> {
           var datas = {
             'status': 'รอไรเดอร์เข้ารับสินค้า',
             'gpsRider': ',',
-            'image_receiver': '',
-            'image_success': ''
+            'image_receiver': '-',
+            'image_success': '-'
           };
           db
               .collection('riderGetOrder')

@@ -73,12 +73,15 @@ class _GetorderPageState extends State<GetorderPage> {
       ),
     ).listen((Position position) async {
       currentRiderLocation = LatLng(position.latitude, position.longitude);
+      riderlocation =
+          LatLng(currentRiderLocation.latitude, currentRiderLocation.longitude);
       var result1 = await db
           .collection('riderGetOrder')
           .doc('order${listResultsResponeDeliveryByDid.itemName}')
           .get();
       var data = result1.data();
-      if (data!['status'] == 'ไรเดอร์กำลังนำส่งสินค้า') {
+      if (data!['status'] == 'ไรเดอร์กำลังนำส่งสินค้า' ||
+          data!['status'] == 'ไรเดอร์เข้ารับสินค้าแล้ว') {
         var data = {
           'gpsRider': '${position.latitude},${position.longitude}',
           'status': 'ไรเดอร์กำลังนำส่งสินค้า'
@@ -86,10 +89,8 @@ class _GetorderPageState extends State<GetorderPage> {
         db
             .collection('riderGetOrder')
             .doc('order${listResultsResponeDeliveryByDid.itemName}')
-            .set(data);
+            .update(data);
       }
-      riderlocation =
-          LatLng(currentRiderLocation.latitude, currentRiderLocation.longitude);
     });
     FirebaseFirestore.instance
         .collection('riderGetOrder')
@@ -256,7 +257,7 @@ class _GetorderPageState extends State<GetorderPage> {
                       },
                       initialCameraPosition: CameraPosition(
                         target: riderlocation,
-                        zoom: 14.0,
+                        zoom: 15.0,
                       ),
                       markers: _markers,
                       polylines: {_polyline},

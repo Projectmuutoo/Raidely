@@ -137,7 +137,7 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                     },
                     initialCameraPosition: CameraPosition(
                       target: itemlocation!,
-                      zoom: 16.0,
+                      zoom: 15.0,
                     ),
                     markers: _markers,
                     polylines: {_polyline},
@@ -635,6 +635,7 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
   }
 
   void _addMarkerAndDrawRoute() {
+    _markers.clear();
     // Add Marker for start location
     _markers.add(
       Marker(

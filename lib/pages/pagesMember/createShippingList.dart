@@ -293,7 +293,8 @@ class _CreateshippinglistPageState extends State<CreateshippinglistPage> {
                                                       ElevatedButton(
                                                         onPressed: () {
                                                           getStatusShipping(
-                                                              value.did);
+                                                              value.did,
+                                                              value.itemName);
                                                         },
                                                         style: ElevatedButton
                                                             .styleFrom(
@@ -349,9 +350,10 @@ class _CreateshippinglistPageState extends State<CreateshippinglistPage> {
     );
   }
 
-  getStatusShipping(int value) {
+  getStatusShipping(int value, String itemname) {
     KeepDidFileShippingStatus keeps = KeepDidFileShippingStatus();
     keeps.did = value.toString();
+    keeps.itemname = itemname;
     context.read<Appdata>().didFileShippingStatus = keeps;
     Get.to(() => const ShippingstatusPage());
   }

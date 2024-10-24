@@ -65,6 +65,7 @@ class _GetorderPageState extends State<GetorderPage> {
       });
     }
     var did = context.read<Appdata>().didInTableDelivery.did;
+    var itemname = context.read<Appdata>().didInTableDelivery.itemname;
     positionStream = Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.high,
@@ -78,14 +79,14 @@ class _GetorderPageState extends State<GetorderPage> {
     });
     FirebaseFirestore.instance
         .collection('riderGetOrder')
-        .doc('order$did')
+        .doc('order$itemname')
         .snapshots()
         .listen((snapshot) async {
       var data = snapshot.data();
       if (data != null) {
         // Extract rider's location from gpsRider
         List<String> latLngSender = data['gpsRider'].split(',');
-// Update rider's location and map markers
+        // Update rider's location and map markers
         setState(() {
           riderlocation = LatLng(double.parse(latLngSender[0].trim()),
               double.parse(latLngSender[1].trim()));
@@ -639,7 +640,7 @@ class _GetorderPageState extends State<GetorderPage> {
                             .get();
                         var datas = result.data();
 
-                        if (datas!['status'] == 'ไรเดอร์รับของแล้ว') {
+                        if (datas!['status'] == 'ไรเดอร์เข้ารับสินค้าแล้ว') {
                           Get.defaultDialog(
                               title: "",
                               titlePadding: EdgeInsets.zero,
@@ -705,7 +706,7 @@ class _GetorderPageState extends State<GetorderPage> {
                         }
 
                         var data = {
-                          'status': 'ไรเดอร์รับของแล้ว',
+                          'status': 'ไรเดอร์เข้ารับสินค้าแล้ว',
                           'sender_Gps': datas['sender_Gps'],
                           'receiver_Gps': datas['receiver_Gps'],
                         };
@@ -716,7 +717,9 @@ class _GetorderPageState extends State<GetorderPage> {
                             .set(data);
                         getOrder(listResultsResponeDeliveryByDid.did, 0);
                         updateStatusdelivery(
-                            listResultsResponeDeliveryByDid.did, 0);
+                            listResultsResponeDeliveryByDid.did,
+                            0,
+                            listResultsResponeDeliveryByDid.itemName);
                       },
                       style: ElevatedButton.styleFrom(
                         fixedSize: Size(
@@ -750,13 +753,17 @@ class _GetorderPageState extends State<GetorderPage> {
                           });
                           updateStatusdelivery(
                               listResultsResponeDeliveryByDid.did,
-                              3); // เปลี่ยนสถานะส่งสินค้ากลับ (หรือสถานะที่ต้องการ)
+                              3,
+                              listResultsResponeDeliveryByDid
+                                  .itemName); // เปลี่ยนสถานะส่งสินค้ากลับ (หรือสถานะที่ต้องการ)
                         } else {
                           // ถ้ายังไม่ส่งสินค้าให้ทำการรับสินค้า
                           getOrder(listResultsResponeDeliveryByDid.did,
                               1); // ส่งค่า 1
                           updateStatusdelivery(
-                              listResultsResponeDeliveryByDid.did, 1);
+                              listResultsResponeDeliveryByDid.did,
+                              1,
+                              listResultsResponeDeliveryByDid.itemName);
                           setState(() {
                             isDelivered = true; // เปลี่ยนสถานะเมื่อกดปุ่ม
                           });
@@ -897,7 +904,7 @@ class _GetorderPageState extends State<GetorderPage> {
     });
   }
 
-  Future<void> updateStatusdelivery(int did, int i) async {
+  Future<void> updateStatusdelivery(int did, int i, String itemname) async {
     var config = await Configuration.getConfig();
     var url = config['apiEndpoint'].toString();
     final position = await Geolocator.getCurrentPosition(
@@ -949,7 +956,7 @@ class _GetorderPageState extends State<GetorderPage> {
           'status': 'ไรเดอร์รับออเดอร์แล้ว',
         };
 
-        db.collection('riderGetOrder').doc('order$did').set(data);
+        db.collection('riderGetOrder').doc('order$itemname').set(data);
       }
     } else if (i == 1) {
       _getCurrentLocation();
@@ -1034,7 +1041,7 @@ class _GetorderPageState extends State<GetorderPage> {
         'image_receive': downloadUrlReceive,
         'image_success': '',
       };
-      db.collection('riderGetOrder').doc('order$did').set(data);
+      db.collection('riderGetOrder').doc('order$itemname').set(data);
       savedFile = null;
       setState(() {});
     } else {
@@ -1109,7 +1116,7 @@ class _GetorderPageState extends State<GetorderPage> {
         'image_receive': box.read('downloadUrlReceive'),
         'image_success': downloadUrlSuccess,
       };
-      db.collection('riderGetOrder').doc('order$did').set(data);
+      db.collection('riderGetOrder').doc('order$itemname').set(data);
       box.remove('downloadUrlReceive');
       // แสดง Popup หลังจากอัปเดตข้อมูลสำเร็จ
       Get.defaultDialog(

@@ -27,9 +27,10 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
   final Set<Marker> _markers = {};
   Polyline _polyline =
       const Polyline(polylineId: PolylineId('route'), points: []);
-
   LatLng? senderlocation;
   LatLng? itemlocation;
+  String showStatus = '';
+  var db = FirebaseFirestore.instance;
 
   @override
   void initState() {
@@ -39,12 +40,13 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
     // Listen to real-time updates from Firestore
     FirebaseFirestore.instance
         .collection('riderGetOrder')
-        .doc('order${context.read<Appdata>().didFileShippingStatus.did}')
+        .doc('order${context.read<Appdata>().didFileShippingStatus.itemname}')
         .snapshots()
-        .listen((snapshot) {
+        .listen((snapshot) async {
       var data = snapshot.data();
       if (data != null) {
         List<String> latLngSender = data['gpsRider'].split(',');
+        showStatus = data['status'];
         setState(() {
           senderlocation = LatLng(double.parse(latLngSender[0].trim()),
               double.parse(latLngSender[1].trim()));
@@ -69,7 +71,6 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
     // Parse sender and receiver locations
     List<String> latLngReceiver =
         listResultsResponeDeliveryByDid.senderGps.split(',');
-
     itemlocation = LatLng(double.parse(latLngReceiver[0].trim()),
         double.parse(latLngReceiver[1].trim()));
     _fetchRoute();
@@ -135,7 +136,7 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                       _addMarkerAndDrawRoute();
                     },
                     initialCameraPosition: CameraPosition(
-                      target: senderlocation!,
+                      target: itemlocation!,
                       zoom: 14.0,
                     ),
                     markers: _markers,
@@ -190,11 +191,40 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                                                 children: [
                                                   Column(
                                                     children: [
-                                                      SvgPicture.string(
-                                                        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M5 12c0 3.859 3.14 7 7 7 3.859 0 7-3.141 7-7s-3.141-7-7-7c-3.86 0-7 3.141-7 7zm12 0c0 2.757-2.243 5-5 5s-5-2.243-5-5 2.243-5 5-5 5 2.243 5 5z"></path></svg>',
-                                                        width: width * 0.03,
-                                                        height: height * 0.03,
-                                                      ),
+                                                      showStatus == 'ดูสินค้า'
+                                                          ? SvgPicture.string(
+                                                              '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M5 12c0 3.859 3.14 7 7 7 3.859 0 7-3.141 7-7s-3.141-7-7-7c-3.86 0-7 3.141-7 7zm12 0c0 2.757-2.243 5-5 5s-5-2.243-5-5 2.243-5 5-5 5 2.243 5 5z"></path></svg>',
+                                                              width:
+                                                                  width * 0.03,
+                                                              height:
+                                                                  height * 0.03,
+                                                            )
+                                                          : showStatus ==
+                                                                      'รอไรเดอร์เข้ารับสินค้า' ||
+                                                                  showStatus ==
+                                                                      'ไรเดอร์กำลังนำส่งสินค้า' ||
+                                                                  showStatus ==
+                                                                      'ไรเดอร์ส่งสินค้าแล้ว' ||
+                                                                  showStatus ==
+                                                                      'ไรเดอร์เข้ารับสินค้าแล้ว'
+                                                              ? SvgPicture
+                                                                  .string(
+                                                                  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 5c-3.859 0-7 3.141-7 7s3.141 7 7 7 7-3.141 7-7-3.141-7-7-7zm0 12c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z"></path><path d="M12 9c-1.627 0-3 1.373-3 3s1.373 3 3 3 3-1.373 3-3-1.373-3-3-3z"></path></svg>',
+                                                                  width: width *
+                                                                      0.03,
+                                                                  height:
+                                                                      height *
+                                                                          0.03,
+                                                                )
+                                                              : SvgPicture
+                                                                  .string(
+                                                                  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M5 12c0 3.859 3.14 7 7 7 3.859 0 7-3.141 7-7s-3.141-7-7-7c-3.86 0-7 3.141-7 7zm12 0c0 2.757-2.243 5-5 5s-5-2.243-5-5 2.243-5 5-5 5 2.243 5 5z"></path></svg>',
+                                                                  width: width *
+                                                                      0.03,
+                                                                  height:
+                                                                      height *
+                                                                          0.03,
+                                                                )
                                                     ],
                                                   ),
                                                   Container(
@@ -204,11 +234,38 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                                                   ),
                                                   Column(
                                                     children: [
-                                                      SvgPicture.string(
-                                                        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 5c-3.859 0-7 3.141-7 7s3.141 7 7 7 7-3.141 7-7-3.141-7-7-7zm0 12c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z"></path><path d="M12 9c-1.627 0-3 1.373-3 3s1.373 3 3 3 3-1.373 3-3-1.373-3-3-3z"></path></svg>',
-                                                        width: width * 0.03,
-                                                        height: height * 0.03,
-                                                      ),
+                                                      showStatus == 'ดูสินค้า'
+                                                          ? SvgPicture.string(
+                                                              '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M5 12c0 3.859 3.14 7 7 7 3.859 0 7-3.141 7-7s-3.141-7-7-7c-3.86 0-7 3.141-7 7zm12 0c0 2.757-2.243 5-5 5s-5-2.243-5-5 2.243-5 5-5 5 2.243 5 5z"></path></svg>',
+                                                              width:
+                                                                  width * 0.03,
+                                                              height:
+                                                                  height * 0.03,
+                                                            )
+                                                          : showStatus ==
+                                                                      'ไรเดอร์กำลังนำส่งสินค้า' ||
+                                                                  showStatus ==
+                                                                      'ไรเดอร์ส่งสินค้าแล้ว' ||
+                                                                  showStatus ==
+                                                                      'ไรเดอร์เข้ารับสินค้าแล้ว'
+                                                              ? SvgPicture
+                                                                  .string(
+                                                                  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 5c-3.859 0-7 3.141-7 7s3.141 7 7 7 7-3.141 7-7-3.141-7-7-7zm0 12c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z"></path><path d="M12 9c-1.627 0-3 1.373-3 3s1.373 3 3 3 3-1.373 3-3-1.373-3-3-3z"></path></svg>',
+                                                                  width: width *
+                                                                      0.03,
+                                                                  height:
+                                                                      height *
+                                                                          0.03,
+                                                                )
+                                                              : SvgPicture
+                                                                  .string(
+                                                                  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M5 12c0 3.859 3.14 7 7 7 3.859 0 7-3.141 7-7s-3.141-7-7-7c-3.86 0-7 3.141-7 7zm12 0c0 2.757-2.243 5-5 5s-5-2.243-5-5 2.243-5 5-5 5 2.243 5 5z"></path></svg>',
+                                                                  width: width *
+                                                                      0.03,
+                                                                  height:
+                                                                      height *
+                                                                          0.03,
+                                                                )
                                                     ],
                                                   ),
                                                   Container(
@@ -218,11 +275,34 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                                                   ),
                                                   Column(
                                                     children: [
-                                                      SvgPicture.string(
-                                                        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M5 12c0 3.859 3.14 7 7 7 3.859 0 7-3.141 7-7s-3.141-7-7-7c-3.86 0-7 3.141-7 7zm12 0c0 2.757-2.243 5-5 5s-5-2.243-5-5 2.243-5 5-5 5 2.243 5 5z"></path></svg>',
-                                                        width: width * 0.03,
-                                                        height: height * 0.03,
-                                                      ),
+                                                      showStatus == 'ดูสินค้า'
+                                                          ? SvgPicture.string(
+                                                              '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M5 12c0 3.859 3.14 7 7 7 3.859 0 7-3.141 7-7s-3.141-7-7-7c-3.86 0-7 3.141-7 7zm12 0c0 2.757-2.243 5-5 5s-5-2.243-5-5 2.243-5 5-5 5 2.243 5 5z"></path></svg>',
+                                                              width:
+                                                                  width * 0.03,
+                                                              height:
+                                                                  height * 0.03,
+                                                            )
+                                                          : showStatus ==
+                                                                  'ไรเดอร์ส่งสินค้าแล้ว'
+                                                              ? SvgPicture
+                                                                  .string(
+                                                                  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 5c-3.859 0-7 3.141-7 7s3.141 7 7 7 7-3.141 7-7-3.141-7-7-7zm0 12c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z"></path><path d="M12 9c-1.627 0-3 1.373-3 3s1.373 3 3 3 3-1.373 3-3-1.373-3-3-3z"></path></svg>',
+                                                                  width: width *
+                                                                      0.03,
+                                                                  height:
+                                                                      height *
+                                                                          0.03,
+                                                                )
+                                                              : SvgPicture
+                                                                  .string(
+                                                                  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M5 12c0 3.859 3.14 7 7 7 3.859 0 7-3.141 7-7s-3.141-7-7-7c-3.86 0-7 3.141-7 7zm12 0c0 2.757-2.243 5-5 5s-5-2.243-5-5 2.243-5 5-5 5 2.243 5 5z"></path></svg>',
+                                                                  width: width *
+                                                                      0.03,
+                                                                  height:
+                                                                      height *
+                                                                          0.03,
+                                                                )
                                                     ],
                                                   ),
                                                 ],
@@ -238,7 +318,7 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                                           Column(
                                             children: [
                                               Text(
-                                                'รอไรเดอร์มารับสินค้า',
+                                                'ไรเดอร์รับออเดอร์แล้ว',
                                                 style: TextStyle(
                                                   fontSize: Get.textTheme
                                                       .labelMedium!.fontSize,
@@ -316,11 +396,34 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                                                 children: [
                                                   Column(
                                                     children: [
-                                                      SvgPicture.string(
-                                                        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M5 12c0 3.859 3.14 7 7 7 3.859 0 7-3.141 7-7s-3.141-7-7-7c-3.86 0-7 3.141-7 7zm12 0c0 2.757-2.243 5-5 5s-5-2.243-5-5 2.243-5 5-5 5 2.243 5 5z"></path></svg>',
-                                                        width: width * 0.03,
-                                                        height: height * 0.03,
-                                                      ),
+                                                      showStatus == 'ดูสินค้า'
+                                                          ? SvgPicture.string(
+                                                              '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M5 12c0 3.859 3.14 7 7 7 3.859 0 7-3.141 7-7s-3.141-7-7-7c-3.86 0-7 3.141-7 7zm12 0c0 2.757-2.243 5-5 5s-5-2.243-5-5 2.243-5 5-5 5 2.243 5 5z"></path></svg>',
+                                                              width:
+                                                                  width * 0.03,
+                                                              height:
+                                                                  height * 0.03,
+                                                            )
+                                                          : showStatus ==
+                                                                  'ไรเดอร์ส่งสินค้าแล้ว'
+                                                              ? SvgPicture
+                                                                  .string(
+                                                                  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 5c-3.859 0-7 3.141-7 7s3.141 7 7 7 7-3.141 7-7-3.141-7-7-7zm0 12c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z"></path><path d="M12 9c-1.627 0-3 1.373-3 3s1.373 3 3 3 3-1.373 3-3-1.373-3-3-3z"></path></svg>',
+                                                                  width: width *
+                                                                      0.03,
+                                                                  height:
+                                                                      height *
+                                                                          0.03,
+                                                                )
+                                                              : SvgPicture
+                                                                  .string(
+                                                                  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M5 12c0 3.859 3.14 7 7 7 3.859 0 7-3.141 7-7s-3.141-7-7-7c-3.86 0-7 3.141-7 7zm12 0c0 2.757-2.243 5-5 5s-5-2.243-5-5 2.243-5 5-5 5 2.243 5 5z"></path></svg>',
+                                                                  width: width *
+                                                                      0.03,
+                                                                  height:
+                                                                      height *
+                                                                          0.03,
+                                                                )
                                                     ],
                                                   ),
                                                   Container(
@@ -330,11 +433,36 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                                                   ),
                                                   Column(
                                                     children: [
-                                                      SvgPicture.string(
-                                                        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 5c-3.859 0-7 3.141-7 7s3.141 7 7 7 7-3.141 7-7-3.141-7-7-7zm0 12c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z"></path><path d="M12 9c-1.627 0-3 1.373-3 3s1.373 3 3 3 3-1.373 3-3-1.373-3-3-3z"></path></svg>',
-                                                        width: width * 0.03,
-                                                        height: height * 0.03,
-                                                      ),
+                                                      showStatus == 'ดูสินค้า'
+                                                          ? SvgPicture.string(
+                                                              '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M5 12c0 3.859 3.14 7 7 7 3.859 0 7-3.141 7-7s-3.141-7-7-7c-3.86 0-7 3.141-7 7zm12 0c0 2.757-2.243 5-5 5s-5-2.243-5-5 2.243-5 5-5 5 2.243 5 5z"></path></svg>',
+                                                              width:
+                                                                  width * 0.03,
+                                                              height:
+                                                                  height * 0.03,
+                                                            )
+                                                          : showStatus ==
+                                                                      'ไรเดอร์กำลังนำส่งสินค้า' ||
+                                                                  showStatus ==
+                                                                      'ไรเดอร์ส่งสินค้าแล้ว'
+                                                              ? SvgPicture
+                                                                  .string(
+                                                                  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 5c-3.859 0-7 3.141-7 7s3.141 7 7 7 7-3.141 7-7-3.141-7-7-7zm0 12c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z"></path><path d="M12 9c-1.627 0-3 1.373-3 3s1.373 3 3 3 3-1.373 3-3-1.373-3-3-3z"></path></svg>',
+                                                                  width: width *
+                                                                      0.03,
+                                                                  height:
+                                                                      height *
+                                                                          0.03,
+                                                                )
+                                                              : SvgPicture
+                                                                  .string(
+                                                                  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M5 12c0 3.859 3.14 7 7 7 3.859 0 7-3.141 7-7s-3.141-7-7-7c-3.86 0-7 3.141-7 7zm12 0c0 2.757-2.243 5-5 5s-5-2.243-5-5 2.243-5 5-5 5 2.243 5 5z"></path></svg>',
+                                                                  width: width *
+                                                                      0.03,
+                                                                  height:
+                                                                      height *
+                                                                          0.03,
+                                                                )
                                                     ],
                                                   ),
                                                   Container(
@@ -344,11 +472,81 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                                                   ),
                                                   Column(
                                                     children: [
-                                                      SvgPicture.string(
-                                                        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M5 12c0 3.859 3.14 7 7 7 3.859 0 7-3.141 7-7s-3.141-7-7-7c-3.86 0-7 3.141-7 7zm12 0c0 2.757-2.243 5-5 5s-5-2.243-5-5 2.243-5 5-5 5 2.243 5 5z"></path></svg>',
-                                                        width: width * 0.03,
-                                                        height: height * 0.03,
-                                                      ),
+                                                      showStatus == 'ดูสินค้า'
+                                                          ? SvgPicture.string(
+                                                              '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M5 12c0 3.859 3.14 7 7 7 3.859 0 7-3.141 7-7s-3.141-7-7-7c-3.86 0-7 3.141-7 7zm12 0c0 2.757-2.243 5-5 5s-5-2.243-5-5 2.243-5 5-5 5 2.243 5 5z"></path></svg>',
+                                                              width:
+                                                                  width * 0.03,
+                                                              height:
+                                                                  height * 0.03,
+                                                            )
+                                                          : showStatus ==
+                                                                      'ไรเดอร์เข้ารับสินค้าแล้ว' ||
+                                                                  showStatus ==
+                                                                      'ไรเดอร์กำลังนำส่งสินค้า' ||
+                                                                  showStatus ==
+                                                                      'ไรเดอร์ส่งสินค้าแล้ว'
+                                                              ? SvgPicture
+                                                                  .string(
+                                                                  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 5c-3.859 0-7 3.141-7 7s3.141 7 7 7 7-3.141 7-7-3.141-7-7-7zm0 12c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z"></path><path d="M12 9c-1.627 0-3 1.373-3 3s1.373 3 3 3 3-1.373 3-3-1.373-3-3-3z"></path></svg>',
+                                                                  width: width *
+                                                                      0.03,
+                                                                  height:
+                                                                      height *
+                                                                          0.03,
+                                                                )
+                                                              : SvgPicture
+                                                                  .string(
+                                                                  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M5 12c0 3.859 3.14 7 7 7 3.859 0 7-3.141 7-7s-3.141-7-7-7c-3.86 0-7 3.141-7 7zm12 0c0 2.757-2.243 5-5 5s-5-2.243-5-5 2.243-5 5-5 5 2.243 5 5z"></path></svg>',
+                                                                  width: width *
+                                                                      0.03,
+                                                                  height:
+                                                                      height *
+                                                                          0.03,
+                                                                )
+                                                    ],
+                                                  ),
+                                                  Container(
+                                                    width: width * 0.002,
+                                                    height: height * 0.05,
+                                                    color: Colors.black,
+                                                  ),
+                                                  Column(
+                                                    children: [
+                                                      showStatus == 'ดูสินค้า'
+                                                          ? SvgPicture.string(
+                                                              '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M5 12c0 3.859 3.14 7 7 7 3.859 0 7-3.141 7-7s-3.141-7-7-7c-3.86 0-7 3.141-7 7zm12 0c0 2.757-2.243 5-5 5s-5-2.243-5-5 2.243-5 5-5 5 2.243 5 5z"></path></svg>',
+                                                              width:
+                                                                  width * 0.03,
+                                                              height:
+                                                                  height * 0.03,
+                                                            )
+                                                          : showStatus ==
+                                                                      'รอไรเดอร์เข้ารับสินค้า' ||
+                                                                  showStatus ==
+                                                                      'ไรเดอร์เข้ารับสินค้าแล้ว' ||
+                                                                  showStatus ==
+                                                                      'ไรเดอร์กำลังนำส่งสินค้า' ||
+                                                                  showStatus ==
+                                                                      'ไรเดอร์ส่งสินค้าแล้ว'
+                                                              ? SvgPicture
+                                                                  .string(
+                                                                  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12 5c-3.859 0-7 3.141-7 7s3.141 7 7 7 7-3.141 7-7-3.141-7-7-7zm0 12c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z"></path><path d="M12 9c-1.627 0-3 1.373-3 3s1.373 3 3 3 3-1.373 3-3-1.373-3-3-3z"></path></svg>',
+                                                                  width: width *
+                                                                      0.03,
+                                                                  height:
+                                                                      height *
+                                                                          0.03,
+                                                                )
+                                                              : SvgPicture
+                                                                  .string(
+                                                                  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M5 12c0 3.859 3.14 7 7 7 3.859 0 7-3.141 7-7s-3.141-7-7-7c-3.86 0-7 3.141-7 7zm12 0c0 2.757-2.243 5-5 5s-5-2.243-5-5 2.243-5 5-5 5 2.243 5 5z"></path></svg>',
+                                                                  width: width *
+                                                                      0.03,
+                                                                  height:
+                                                                      height *
+                                                                          0.03,
+                                                                )
                                                     ],
                                                   ),
                                                 ],
@@ -358,14 +556,14 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                                                   Row(
                                                     children: [
                                                       Text(
-                                                        'รายละเอียดการจัดส่ง 1',
+                                                        'ไรเดอร์ส่งสินค้าแล้ว',
                                                         style: TextStyle(
                                                           fontSize: Get
                                                               .textTheme
                                                               .titleMedium!
                                                               .fontSize,
                                                         ),
-                                                      ),
+                                                      )
                                                     ],
                                                   ),
                                                   SizedBox(
@@ -373,14 +571,14 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                                                   Row(
                                                     children: [
                                                       Text(
-                                                        'รายละเอียดการจัดส่ง 2',
+                                                        'ไรเดอร์กำลังนำส่งสินค้า',
                                                         style: TextStyle(
                                                           fontSize: Get
                                                               .textTheme
                                                               .titleMedium!
                                                               .fontSize,
                                                         ),
-                                                      ),
+                                                      )
                                                     ],
                                                   ),
                                                   SizedBox(
@@ -388,14 +586,29 @@ class _ShippingstatusPageState extends State<ShippingstatusPage> {
                                                   Row(
                                                     children: [
                                                       Text(
-                                                        'รายละเอียดการจัดส่ง 3',
+                                                        'ไรเดอร์เข้ารับสินค้าแล้ว',
                                                         style: TextStyle(
                                                           fontSize: Get
                                                               .textTheme
                                                               .titleMedium!
                                                               .fontSize,
                                                         ),
-                                                      ),
+                                                      )
+                                                    ],
+                                                  ),
+                                                  SizedBox(
+                                                      height: height * 0.06),
+                                                  Row(
+                                                    children: [
+                                                      Text(
+                                                        'รอไรเดอร์เข้ารับสินค้า',
+                                                        style: TextStyle(
+                                                          fontSize: Get
+                                                              .textTheme
+                                                              .titleMedium!
+                                                              .fontSize,
+                                                        ),
+                                                      )
                                                     ],
                                                   ),
                                                 ],

@@ -44,6 +44,8 @@ class _DetailsShippingListState extends State<DetailsShippingList> {
   TextEditingController latlngCth = TextEditingController();
   LatLng? currentPosition;
   LatLng? markerPosition;
+  LatLng? markerSenderPosition;
+  LatLng? markerReceiverPosition;
   GoogleMapController? mapController;
   bool isTyping = false;
   bool isCheck = false;
@@ -135,6 +137,47 @@ class _DetailsShippingListState extends State<DetailsShippingList> {
                         physics: const AlwaysScrollableScrollPhysics(),
                         child: Column(
                           children: [
+                            //=================
+                            //=================
+                            //=================
+                            //=================
+                            Column(
+                              children: [
+                                SizedBox(
+                                  width: 200, // กำหนดความกว้างของปุ่ม
+                                  child: FilledButton(
+                                    onPressed: showMapReciverAndSender,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                          Colors.deepPurpleAccent, // สีพื้นหลัง
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(
+                                            20), // ขอบมุมของปุ่ม
+                                      ),
+                                      elevation: 5, // เงาของปุ่ม
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 16), // ระยะห่างภายในปุ่ม
+                                    ),
+                                    child: const Text(
+                                      'แผนที่ผู้รับและผู้ส่ง',
+                                      style: TextStyle(
+                                        fontSize: 18, // ขนาดตัวอักษร
+                                        color: Colors.white, // สีตัวอักษร
+                                        fontWeight:
+                                            FontWeight.bold, // น้ำหนักตัวอักษร
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              ],
+                            ),
+                            SizedBox(height: height * 0.02),
+
+                            //=================
+                            //=================
+                            //=================
+                            //=================
+                            //=================
                             Container(
                               decoration: BoxDecoration(
                                 color: const Color(0xffFEF7E7),
@@ -987,7 +1030,7 @@ class _DetailsShippingListState extends State<DetailsShippingList> {
         if (responsePutJsonUpdateMember.statusCode == 200) {
           var db = FirebaseFirestore.instance;
           var data = {
-            'status': 'รอไรเดอร์รับของ',
+            'status': 'รอไรเดอร์เข้ารับสินค้า',
             'sender_Id': combinedMembers[0].mid,
             'receiver_Id': combinedMembers[1].mid,
             'sender_Gps': latlngCth.text.isNotEmpty
@@ -999,6 +1042,14 @@ class _DetailsShippingListState extends State<DetailsShippingList> {
               .collection('detailsShippingList')
               .doc('order${nameProductCth.text}')
               .set(data);
+          var datas = {
+            'status': 'รอไรเดอร์เข้ารับสินค้า',
+            'gpsRider': ',',
+          };
+          db
+              .collection('riderGetOrder')
+              .doc('order${nameProductCth.text}')
+              .set(datas);
           // back Loading Indicator
           Get.back();
           Get.defaultDialog(
@@ -1256,6 +1307,118 @@ class _DetailsShippingListState extends State<DetailsShippingList> {
                                       ),
                                     ),
                                   ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  void showMapReciverAndSender() {
+    // ใช้ width สำหรับ horizontal
+    // left/right
+    double width = MediaQuery.of(context).size.width;
+    // ใช้ height สำหรับ vertical
+    // top/bottom
+    double height = MediaQuery.of(context).size.height;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: false,
+      enableDrag: false,
+      builder: (BuildContext bc) {
+        return SizedBox(
+          height: height * 0.9,
+          child: FutureBuilder(
+            future: getGPS(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState != ConnectionState.done) {
+                return Container(
+                  color: Colors.white,
+                  child: const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
+              markerSenderPosition = currentPosition;
+              String gpsString = combinedMembers[1].gps;
+              List<String> latLngParts = gpsString.split(',');
+              double latitude = double.parse(latLngParts[0].trim());
+              double longitude = double.parse(latLngParts[1].trim());
+              markerReceiverPosition = LatLng(latitude, longitude);
+
+              return StatefulBuilder(
+                builder: (context, snapshot) {
+                  return Column(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.only(left: width * 0.02),
+                        child: Row(
+                          children: [
+                            InkWell(
+                              onTap: () => Get.back(),
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: width * 0.01,
+                                  vertical: height * 0.005,
+                                ),
+                                child: SvgPicture.string(
+                                  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M12.707 17.293 8.414 13H18v-2H8.414l4.293-4.293-1.414-1.414L4.586 12l6.707 6.707z"></path></svg>',
+                                  height: height * 0.04,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: Stack(
+                            alignment: Alignment.bottomCenter,
+                            children: [
+                              Container(
+                                height: height * 0.85,
+                                child: GoogleMap(
+                                  onMapCreated:
+                                      (GoogleMapController controller) {
+                                    mapController = controller;
+                                  },
+                                  initialCameraPosition: CameraPosition(
+                                    target: currentPosition!,
+                                    zoom: 15,
+                                  ),
+                                  markers: {
+                                    if (markerSenderPosition != null)
+                                      Marker(
+                                        markerId:
+                                            const MarkerId('currentLocation'),
+                                        position: markerSenderPosition!,
+                                        infoWindow: const InfoWindow(
+                                            title: 'Sender Location'),
+                                      ),
+                                    Marker(
+                                      markerId:
+                                          const MarkerId('currentLocation'),
+                                      position: markerReceiverPosition!,
+                                      infoWindow: const InfoWindow(
+                                          title: 'Receiver Location'),
+                                      icon:
+                                          BitmapDescriptor.defaultMarkerWithHue(
+                                              BitmapDescriptor
+                                                  .hueBlue), // เปลี่ยนเป็นสีฟ้า
+                                    ),
+                                  },
                                 ),
                               ),
                             ],

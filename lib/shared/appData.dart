@@ -18,6 +18,7 @@ class KeepLocation {
 
 class KeepDidInTableDelivery {
   String did = '';
+  String itemname = '';
   bool clickGetorder = true;
 }
 
@@ -27,4 +28,5 @@ class KeepPhoneFileDetailsShippingList {
 
 class KeepDidFileShippingStatus {
   String did = '';
+  String itemname = '';
 }

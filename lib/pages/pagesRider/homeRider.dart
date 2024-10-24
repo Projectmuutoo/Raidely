@@ -7,10 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:raidely/config/config.dart';
-import 'package:raidely/models/request/insertRiderassignmentPost.dart';
 import 'package:raidely/models/response/byPhoneRiderGetResponse.dart';
 import 'package:http/http.dart' as http;
 import 'package:raidely/models/response/deliveryAllGetResponse.dart';
@@ -268,7 +266,8 @@ class _HomeriderPageState extends State<HomeriderPage> {
                                               ),
                                               ElevatedButton(
                                                 onPressed: () =>
-                                                    getOrderDetails(value.did),
+                                                    getOrderDetails(value.did,
+                                                        value.itemName),
                                                 style: ElevatedButton.styleFrom(
                                                   fixedSize: Size(
                                                     width * 0.32,
@@ -357,7 +356,7 @@ class _HomeriderPageState extends State<HomeriderPage> {
                 .get();
             var datas = result.data();
 
-            if (datas!['status'] == 'ไรเดอร์รับของแล้ว') {
+            if (datas!['status'] == 'ไรเดอร์เข้ารับสินค้าแล้ว') {
               Get.defaultDialog(
                   title: "",
                   titlePadding: EdgeInsets.zero,
@@ -415,7 +414,7 @@ class _HomeriderPageState extends State<HomeriderPage> {
             }
 
             var data = {
-              'status': 'ไรเดอร์รับของแล้ว',
+              'status': 'ไรเดอร์เข้ารับสินค้าแล้ว',
               'sender_Gps': datas['sender_Gps'],
               'receiver_Gps': datas['receiver_Gps'],
             };
@@ -479,11 +478,12 @@ class _HomeriderPageState extends State<HomeriderPage> {
         'did': value,
         'status': 'ไรเดอร์เข้ารับสินค้าแล้ว'
       };
-      db.collection('riderGetOrder').doc('order$value').set(data);
+      db.collection('riderGetOrder').doc('order$itemName').set(data);
 
       KeepDidInTableDelivery keep = KeepDidInTableDelivery();
       keep.clickGetorder = true;
       keep.did = value.toString();
+      keep.itemname = itemName;
       context.read<Appdata>().didInTableDelivery = keep;
 
       var jsonriderass = {
@@ -516,7 +516,7 @@ class _HomeriderPageState extends State<HomeriderPage> {
     }
   }
 
-  void getOrderDetails(int value) async {
+  void getOrderDetails(int value, String itemname) async {
     var db = FirebaseFirestore.instance;
     // สร้าง KeepDidInTableDelivery ใหม่
     KeepDidInTableDelivery keep = KeepDidInTableDelivery();
@@ -535,8 +535,9 @@ class _HomeriderPageState extends State<HomeriderPage> {
     var data = {
       'gpsRider': '${position.latitude},${position.longitude}',
       'did': value,
+      'status': 'ดูสินค้า',
     };
-    db.collection('riderGetOrder').doc('order$value').set(data);
+    db.collection('riderGetOrder').doc('order$itemname').set(data);
 
     // ส่งค่าที่ต้องการไปยัง GetorderPage
     Get.to(() => const GetorderPage()); // ส่งค่า value ไปยัง GetorderPage

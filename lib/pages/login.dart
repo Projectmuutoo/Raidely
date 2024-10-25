@@ -339,6 +339,7 @@ class _LoginPageState extends State<LoginPage> {
         checkTextPhoneWarningIsEmpty = false;
         checkTextPasswordWarningIsEmpty = false;
       });
+
       var memberAllResponse = memberAllGetResponseFromJson(responseMember.body);
       var riderAllResponse = riderAllGetResponseFromJson(responseRider.body);
       //เก็บ phone,password ของ members,rider ทุกคนมา
@@ -359,13 +360,17 @@ class _LoginPageState extends State<LoginPage> {
             LoginKeepUser users = LoginKeepUser();
             users.phone = phoneCth.text.toString();
             context.read<Appdata>().loginKeepUsers = users;
-            KeepLocation keep = KeepLocation();
-            keep.pickupLocation = box.read('pickupLocation');
-            context.read<Appdata>().pickupLocations = keep;
+            if (box.read('pickupLocation') == null) {
+              KeepLocation keep = KeepLocation();
+              keep.pickupLocation = '-';
+              context.read<Appdata>().pickupLocations = keep;
+            } else {
+              KeepLocation keep = KeepLocation();
+              keep.pickupLocation = box.read('pickupLocation');
+              context.read<Appdata>().pickupLocations = keep;
+            }
             Get.to(
-              () => NavbottompagesPage(
-                selectedPage: 1,
-              ),
+              () => NavbottompagesPage(selectedPage: 1),
             );
           }
           //ถ้าหาก phoneRiders เป็น true

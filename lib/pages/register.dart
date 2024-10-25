@@ -1232,6 +1232,66 @@ class _RegisterPageState extends State<RegisterPage> {
               ],
             );
           } else {
+            if (passwordCth.text == null ||
+                passwordCth.text.trim().isEmpty ||
+                passwordCheckCtl.text == null ||
+                passwordCheckCtl.text.trim().isEmpty) {
+              Get.defaultDialog(
+                title: "",
+                titlePadding: EdgeInsets.zero,
+                content: Column(
+                  children: [
+                    Image.asset(
+                      'assets/images/warning.png',
+                      width: MediaQuery.of(context).size.width * 0.16,
+                      height: MediaQuery.of(context).size.width * 0.16,
+                      fit: BoxFit.cover,
+                    ),
+                    SizedBox(height: MediaQuery.of(context).size.width * 0.03),
+                    Text(
+                      'ไม่สามารถสมัครสมาชิกได้!',
+                      style: TextStyle(
+                        fontSize: Get.textTheme.titleLarge!.fontSize,
+                      ),
+                    ),
+                    SizedBox(height: MediaQuery.of(context).size.width * 0.02),
+                    Text(
+                      'โปรดตรวจสอบรหัสผ่านของท่านอีกครั้ง.',
+                      style: TextStyle(
+                        fontSize: Get.textTheme.titleSmall!.fontSize,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+                barrierDismissible: false,
+                actions: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Get.back();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      fixedSize: Size(
+                        MediaQuery.of(context).size.width * 0.3,
+                        MediaQuery.of(context).size.height * 0.05,
+                      ),
+                      backgroundColor: const Color(0xffFEF7E7),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                    child: Text(
+                      'ยืนยัน',
+                      style: TextStyle(
+                        fontSize: Get.textTheme.titleSmall!.fontSize,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+              return;
+            }
             //ถ้า password ตรงกัน
             if (passwordCth.text == passwordCheckCtl.text) {
               //ถ้าหากป้อนทะเบียนรถถูก field นั้นต้องมีตัวเลข และ ตัวอักษร
@@ -1725,6 +1785,68 @@ class _RegisterPageState extends State<RegisterPage> {
               }
             }
             //ถ้า password ตรงกัน
+
+            if (passwordCth.text == null ||
+                passwordCth.text.trim().isEmpty ||
+                passwordCheckCtl.text == null ||
+                passwordCheckCtl.text.trim().isEmpty) {
+              Get.defaultDialog(
+                title: "",
+                titlePadding: EdgeInsets.zero,
+                content: Column(
+                  children: [
+                    Image.asset(
+                      'assets/images/warning.png',
+                      width: MediaQuery.of(context).size.width * 0.16,
+                      height: MediaQuery.of(context).size.width * 0.16,
+                      fit: BoxFit.cover,
+                    ),
+                    SizedBox(height: MediaQuery.of(context).size.width * 0.03),
+                    Text(
+                      'ไม่สามารถสมัครสมาชิกได้!',
+                      style: TextStyle(
+                        fontSize: Get.textTheme.titleLarge!.fontSize,
+                      ),
+                    ),
+                    SizedBox(height: MediaQuery.of(context).size.width * 0.02),
+                    Text(
+                      'โปรดตรวจสอบรหัสผ่านของท่านอีกครั้ง.',
+                      style: TextStyle(
+                        fontSize: Get.textTheme.titleSmall!.fontSize,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+                barrierDismissible: false,
+                actions: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Get.back();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      fixedSize: Size(
+                        MediaQuery.of(context).size.width * 0.3,
+                        MediaQuery.of(context).size.height * 0.05,
+                      ),
+                      backgroundColor: const Color(0xffFEF7E7),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                    child: Text(
+                      'ยืนยัน',
+                      style: TextStyle(
+                        fontSize: Get.textTheme.titleSmall!.fontSize,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+              return;
+            }
+
             if (passwordCth.text == passwordCheckCtl.text) {
               RegisterMemberPostRequest jsonRegisterMember =
                   RegisterMemberPostRequest(

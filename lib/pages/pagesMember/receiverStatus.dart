@@ -30,24 +30,29 @@ class _ReceiverPageState extends State<ReceiverPage> {
   LatLng? senderlocation;
   LatLng? itemlocation;
   String showStatus = '';
+  String image_receive = '';
+  String image_success = '';
   var db = FirebaseFirestore.instance;
+  late BitmapDescriptor customIcon;
 
   @override
   void initState() {
     loadData = loadDataAsync();
-    super.initState();
+    _setCustomMarkerIcon();
 
     // Listen to real-time updates from Firestore
     FirebaseFirestore.instance
         .collection('riderGetOrder')
         .doc('order${context.read<Appdata>().didFileShippingStatus.itemname}')
         .snapshots()
-        .listen((snapshot) async {
+        .listen((snapshot) {
       var data = snapshot.data();
       if (data != null) {
         List<String> latLngSender = data['gpsRider'].split(',');
         showStatus = data['status'];
         setState(() {
+          image_receive = data['image_receiver'];
+          image_success = data['image_success'];
           senderlocation = LatLng(double.parse(latLngSender[0].trim()),
               double.parse(latLngSender[1].trim()));
           _addMarkerAndDrawRoute(); // Update map markers and routes
@@ -55,12 +60,12 @@ class _ReceiverPageState extends State<ReceiverPage> {
         });
       }
     });
+    super.initState();
   }
 
   Future<void> loadDataAsync() async {
     var config = await Configuration.getConfig();
     var url = config['apiEndpoint'].toString();
-    var apiKey = config['apiKey'];
     var did = context.read<Appdata>().didFileShippingStatus.did;
 
     // Fetch data from API
@@ -137,7 +142,7 @@ class _ReceiverPageState extends State<ReceiverPage> {
                     },
                     initialCameraPosition: CameraPosition(
                       target: itemlocation!,
-                      zoom: 15.0,
+                      zoom: 16.0,
                     ),
                     markers: _markers,
                     polylines: {_polyline},
@@ -426,7 +431,7 @@ class _ReceiverPageState extends State<ReceiverPage> {
                                                   ),
                                                   Container(
                                                     width: width * 0.002,
-                                                    height: height * 0.05,
+                                                    height: height * 0.13,
                                                     color: Colors.black,
                                                   ),
                                                   Column(
@@ -465,7 +470,7 @@ class _ReceiverPageState extends State<ReceiverPage> {
                                                   ),
                                                   Container(
                                                     width: width * 0.002,
-                                                    height: height * 0.05,
+                                                    height: height * 0.12,
                                                     color: Colors.black,
                                                   ),
                                                   Column(
@@ -506,7 +511,7 @@ class _ReceiverPageState extends State<ReceiverPage> {
                                                   ),
                                                   Container(
                                                     width: width * 0.002,
-                                                    height: height * 0.05,
+                                                    height: height * 0.13,
                                                     color: Colors.black,
                                                   ),
                                                   Column(
@@ -550,22 +555,39 @@ class _ReceiverPageState extends State<ReceiverPage> {
                                                 ],
                                               ),
                                               Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
                                                 children: [
                                                   Row(
                                                     children: [
-                                                      Text(
-                                                        'ไรเดอร์ส่งสินค้าแล้ว',
-                                                        style: TextStyle(
-                                                          fontSize: Get
-                                                              .textTheme
-                                                              .titleMedium!
-                                                              .fontSize,
-                                                        ),
-                                                      )
+                                                      Column(
+                                                        children: [
+                                                          Text(
+                                                            'ไรเดอร์ส่งสินค้าแล้ว',
+                                                            style: TextStyle(
+                                                              fontSize: Get
+                                                                  .textTheme
+                                                                  .titleMedium!
+                                                                  .fontSize,
+                                                            ),
+                                                          ),
+                                                          image_success == '-'
+                                                              ? Container()
+                                                              : Image.network(
+                                                                  image_success,
+                                                                  width: width *
+                                                                      0.22,
+                                                                )
+                                                        ],
+                                                      ),
                                                     ],
                                                   ),
-                                                  SizedBox(
-                                                      height: height * 0.06),
+                                                  image_success == '-'
+                                                      ? SizedBox(
+                                                          height: height * 0.14)
+                                                      : SizedBox(
+                                                          height:
+                                                              height * 0.04),
                                                   Row(
                                                     children: [
                                                       Text(
@@ -580,22 +602,37 @@ class _ReceiverPageState extends State<ReceiverPage> {
                                                     ],
                                                   ),
                                                   SizedBox(
-                                                      height: height * 0.06),
+                                                      height: height * 0.13),
                                                   Row(
                                                     children: [
-                                                      Text(
-                                                        'ไรเดอร์เข้ารับสินค้าแล้ว',
-                                                        style: TextStyle(
-                                                          fontSize: Get
-                                                              .textTheme
-                                                              .titleMedium!
-                                                              .fontSize,
-                                                        ),
-                                                      )
+                                                      Column(
+                                                        children: [
+                                                          Text(
+                                                            'ไรเดอร์เข้ารับสินค้าแล้ว',
+                                                            style: TextStyle(
+                                                              fontSize: Get
+                                                                  .textTheme
+                                                                  .titleMedium!
+                                                                  .fontSize,
+                                                            ),
+                                                          ),
+                                                          image_receive == '-'
+                                                              ? Container()
+                                                              : Image.network(
+                                                                  image_receive,
+                                                                  width: width *
+                                                                      0.22,
+                                                                )
+                                                        ],
+                                                      ),
                                                     ],
                                                   ),
-                                                  SizedBox(
-                                                      height: height * 0.06),
+                                                  image_receive == '-'
+                                                      ? SizedBox(
+                                                          height: height * 0.14)
+                                                      : SizedBox(
+                                                          height:
+                                                              height * 0.04),
                                                   Row(
                                                     children: [
                                                       Text(
@@ -634,28 +671,34 @@ class _ReceiverPageState extends State<ReceiverPage> {
     );
   }
 
+  void _setCustomMarkerIcon() async {
+    customIcon = await BitmapDescriptor.fromAssetImage(
+      const ImageConfiguration(size: Size(24, 24)), // กำหนดขนาดของภาพ
+      'assets/images/motorcycle.png', // path ของภาพใน assets
+    );
+  }
+
   void _addMarkerAndDrawRoute() {
     _markers.clear();
     // Add Marker for start location
     _markers.add(
       Marker(
-        markerId: const MarkerId('start'),
+        markerId: const MarkerId('ไรเดอร์'),
         position: senderlocation!,
         infoWindow: const InfoWindow(
-          title: 'จุดเริ่มต้น',
-          snippet: 'รายละเอียดเกี่ยวกับจุดเริ่มต้น',
+          title: 'ไรเดอร์',
         ),
+        icon: customIcon,
       ),
     );
 
     // Add Marker for end location
     _markers.add(
       Marker(
-        markerId: const MarkerId('end'),
+        markerId: const MarkerId('คุณ'),
         position: itemlocation!,
         infoWindow: const InfoWindow(
-          title: 'ปลายทาง',
-          snippet: 'รายละเอียดเกี่ยวกับปลายทาง',
+          title: 'คุณ',
         ),
       ),
     );
